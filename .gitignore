@@ -120,3 +120,17 @@ libsuqaconsensus.pc
 src/bench/bench_suqa
 src/test/test_suqa_fuzzy
 test/config.ini
+
+libsinconsensus\.pc
+
+src/config/sin-config\.h
+
+src/config/sin-config\.h\.in
+
+src/qt/sin-qt
+
+src/sin-cli
+
+src/sin-tx
+
+src/sind

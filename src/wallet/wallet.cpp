@@ -2807,6 +2807,7 @@ void CWallet::AvailableCoins(std::vector<COutput> &vCoins, bool fOnlySafe, const
 {
     AssertLockHeld(cs_main);
     AssertLockHeld(cs_wallet);
+    std::map<CScript, isminetype> mapOutputIsMine;
 
     vCoins.clear();
     // CAmount nTotal = 0;
@@ -2908,7 +2909,14 @@ void CWallet::AvailableCoins(std::vector<COutput> &vCoins, bool fOnlySafe, const
             if (IsSpent(wtxid, i))
                 continue;
 
-            isminetype mine = IsMine(pcoin->tx->vout[i]);
+            //isminetype mine = IsMine(pcoin->tx->vout[i]);
+            auto inserted = mapOutputIsMine.emplace(pcoin->vout[i].scriptPubKey, ISMINE_NO);
+            if (inserted.second) {
+               inserted.first->second = IsMine(pcoin->vout[i]);
+            }
+            
+            isminetype mine = inserted.first->second;
+
 
             if (mine == ISMINE_NO) {
                 continue;

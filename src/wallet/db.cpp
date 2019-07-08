@@ -439,9 +439,15 @@ void BerkeleyEnvironment::CheckpointLSN(const std::string& strFile)
     dbenv->txn_checkpoint(0, 0, 0);
     if (fMockDb)
         return;
-    dbenv->lsn_reset(strFile.c_str(), 0);
+    //dbenv->lsn_reset(strFile.c_str(), 0);
 }
 
+void BerkeleyEnvironment::lsn_reset(const std::string& strFile)
+{
+
+    dbenv->lsn_reset(strFile.c_str(),0);
+
+}
 
 BerkeleyBatch::BerkeleyBatch(BerkeleyDatabase& database, const char* pszMode, bool fFlushOnCloseIn) : pdb(nullptr), activeTxn(nullptr)
 {
@@ -736,7 +742,7 @@ bool BerkeleyBatch::PeriodicFlush(BerkeleyDatabase& database)
                 env->CloseDb(strFile);
                 env->CheckpointLSN(strFile);
 
-                env->mapFileUseCount.erase(mi++);
+                //env->mapFileUseCount.erase(mi++);
                 LogPrint(BCLog::DB, "Flushed %s %dms\n", strFile, GetTimeMillis() - nStart);
                 ret = true;
             }
@@ -766,6 +772,8 @@ bool BerkeleyDatabase::Backup(const std::string& strDest)
                 env->CloseDb(strFile);
                 env->CheckpointLSN(strFile);
                 env->mapFileUseCount.erase(strFile);
+                LogPrintf("Issuing lsn_reset on backup for portability\n");
+                env->lsn_reset(strFile);
 
                 // Copy wallet file
                 fs::path pathSrc = env->Directory() / strFile;
