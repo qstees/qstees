@@ -57,7 +57,7 @@ public:
         EXT_PUBLIC_KEY,
         EXT_SECRET_KEY,
 
-        MAX_BASE58_TYPES
+        MAX_BASE58_TYPES    
     };
 
     const Consensus::Params& GetConsensus() const { return consensus; }

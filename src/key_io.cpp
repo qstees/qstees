@@ -16,6 +16,8 @@
 #include <string.h>
 #include <algorithm>
 
+#include <logging.h>    //dbg
+
 namespace
 {
 class DestinationEncoder : public boost::static_visitor<std::string>
@@ -129,23 +131,33 @@ CTxDestination DecodeDestination(const std::string& str, const CChainParams& par
     return CNoDestination();
 }
     
-bool GetIndexKey(CTxDestination address, uint160& hashBytes, int& type) const
+} // namespace
+
+bool GetIndexKey(const std::string& str, uint160& hash, int& type)
 {
+    std::vector<unsigned char> data;
+    CTxDestination address = DecodeDestination(str);
     if (!IsValidDestination(address)) {
         return false;
-    } else if (vchVersion == Params().Base58Prefix(CChainParams::PUBKEY_ADDRESS)) {
-        memcpy(&hashBytes, &vchData[0], 20);
-        type = 1;
-        return true;
-    } else if (vchVersion == Params().Base58Prefix(CChainParams::SCRIPT_ADDRESS)) {
-        memcpy(&hashBytes, &vchData[0], 20);
-        type = 2;
-        return true;
     }
     
+    if (DecodeBase58Check(str, data)) {
+        const std::vector<unsigned char>& pubkey_prefix = Params().Base58Prefix(CChainParams::PUBKEY_ADDRESS);
+        if (data.size() == hash.size() + pubkey_prefix.size() && std::equal(pubkey_prefix.begin(), pubkey_prefix.end(), data.begin())) {
+            std::copy(data.begin() + pubkey_prefix.size(), data.end(), hash.begin());
+            type = 1;
+            return true;
+        }
+        
+        const std::vector<unsigned char>& script_prefix = Params().Base58Prefix(CChainParams::SCRIPT_ADDRESS);
+        if (data.size() == hash.size() + script_prefix.size() && std::equal(script_prefix.begin(), script_prefix.end(), data.begin())) {
+            std::copy(data.begin() + script_prefix.size(), data.end(), hash.begin());
+            type = 2;
+            return true;
+        }
+    }
     return false;
 }
-} // namespace
 
 CKey DecodeSecret(const std::string& str)
 {

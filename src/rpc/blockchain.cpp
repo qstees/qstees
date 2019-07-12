@@ -160,9 +160,9 @@ UniValue blockToDeltasJSON(const CBlock& block, const CBlockIndex* blockindex)
                 
                 if (GetSpentIndex(spentKey, spentInfo)) {
                     if (spentInfo.addressType == 1) {
-                        delta.push_back(Pair("address", CTxDestination(CKeyID(spentInfo.addressHash)).ToString()));
+                        delta.push_back(Pair("address", EncodeDestination(CKeyID(spentInfo.addressHash))));
                     } else if (spentInfo.addressType == 2)  {
-                        delta.push_back(Pair("address", CTxDestination(CScriptID(spentInfo.addressHash)).ToString()));
+                        delta.push_back(Pair("address", EncodeDestination(CScriptID(spentInfo.addressHash))));
                     } else {
                         continue;
                     }
@@ -189,12 +189,12 @@ UniValue blockToDeltasJSON(const CBlock& block, const CBlockIndex* blockindex)
             UniValue delta(UniValue::VOBJ);
             
             if (out.scriptPubKey.IsPayToScriptHash()) {
-                vector<unsigned char> hashBytes(out.scriptPubKey.begin()+2, out.scriptPubKey.begin()+22);
-                delta.push_back(Pair("address", CTxDestination(CScriptID(uint160(hashBytes))).ToString()));
+                std::vector<unsigned char> hashBytes(out.scriptPubKey.begin()+2, out.scriptPubKey.begin()+22);
+                delta.push_back(Pair("address", EncodeDestination(CScriptID(uint160(hashBytes)))));
                 
             } else if (out.scriptPubKey.IsPayToPublicKeyHash()) {
-                vector<unsigned char> hashBytes(out.scriptPubKey.begin()+3, out.scriptPubKey.begin()+23);
-                delta.push_back(Pair("address", CTxDestination(CKeyID(uint160(hashBytes))).ToString()));
+                std::vector<unsigned char> hashBytes(out.scriptPubKey.begin()+3, out.scriptPubKey.begin()+23);
+                delta.push_back(Pair("address", EncodeDestination(CKeyID(uint160(hashBytes)))));
             } else {
                 continue;
             }
@@ -775,7 +775,7 @@ static UniValue getmempoolentry(const JSONRPCRequest& request)
 UniValue getblockdeltas(const JSONRPCRequest& request)
 {
     if (request.fHelp || request.params.size() != 1)
-        throw runtime_error("");
+        throw std::runtime_error("");
     
     std::string strHash = request.params[0].get_str();
     uint256 hash(uint256S(strHash));
@@ -798,7 +798,7 @@ UniValue getblockdeltas(const JSONRPCRequest& request)
 UniValue getblockhashes(const JSONRPCRequest& request)
 {
     if (request.fHelp || request.params.size() < 2)
-        throw runtime_error(
+        throw std::runtime_error(
                             "getblockhashes timestamp\n"
                             "\nReturns array of hashes of blocks within the timestamp range provided.\n"
                             "\nArguments:\n"
@@ -2573,8 +2573,8 @@ static const CRPCCommand commands[] =
     { "blockchain",         "getbestblockhash",       &getbestblockhash,       {} },
     { "blockchain",         "getblockcount",          &getblockcount,          {} },
     { "blockchain",         "getblock",               &getblock,               {"blockhash","verbosity|verbose"} },
-    { "blockchain",         "getblockdeltas",         &getblockdeltas,         false, {} },
-    { "blockchain",         "getblockhashes",         &getblockhashes,         true,  {}  },
+    { "blockchain",         "getblockdeltas",         &getblockdeltas,         {} },
+    { "blockchain",         "getblockhashes",         &getblockhashes,         {}  },
     { "blockchain",         "getblockhash",           &getblockhash,           {"height"} },
     { "blockchain",         "getblockheader",         &getblockheader,         {"blockhash","verbose"} },
     { "blockchain",         "getchaintips",           &getchaintips,           {} },

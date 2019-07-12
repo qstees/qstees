@@ -438,7 +438,7 @@ static void EnableOrDisableLogCategories(UniValue cats, bool enable) {
 UniValue echo(const JSONRPCRequest& request)
 {
     if (request.fHelp)
-        throw runtime_error(
+        throw std::runtime_error(
                             "echo|echojson \"message\" ...\n"
                             "\nSimply echo back the input arguments. This command is for testing.\n"
                             "\nThe difference between echo and echojson is that echojson has argument conversion enabled in the client-side table in"
@@ -451,9 +451,9 @@ UniValue echo(const JSONRPCRequest& request)
 bool getAddressFromIndex(const int &type, const uint160 &hash, std::string &address)
 {
     if (type == 2) {
-        address = CTxDestination(CScriptID(hash)).ToString();
+        address = EncodeDestination(CScriptID(hash));
     } else if (type == 1) {
-        address = CTxDestination(CKeyID(hash)).ToString();
+        address = EncodeDestination(CKeyID(hash));
     } else {
         return false;
     }
@@ -463,11 +463,10 @@ bool getAddressFromIndex(const int &type, const uint160 &hash, std::string &addr
 bool getAddressesFromParams(const UniValue& params, std::vector<std::pair<uint160, int> > &addresses)
 {
     if (params[0].isStr()) {
-        CTxDestination address = DecodeDestination(params[0].get_str());
         uint160 hashBytes;
         int type = 0;
-        if (!address.GetIndexKey(hashBytes, type)) {
-            throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid address");
+        if (!GetIndexKey(params[0].get_str(), hashBytes, type)) {
+            throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, strprintf("Invalid address %d",type));
         }
         addresses.push_back(std::make_pair(hashBytes, type));
     } else if (params[0].isObject()) {
@@ -480,11 +479,9 @@ bool getAddressesFromParams(const UniValue& params, std::vector<std::pair<uint16
         std::vector<UniValue> values = addressValues.getValues();
         
         for (std::vector<UniValue>::iterator it = values.begin(); it != values.end(); ++it) {
-            
-            CTxDestination address = DecodeDestination(it->get_str());
             uint160 hashBytes;
             int type = 0;
-            if (!address.GetIndexKey(hashBytes, type)) {
+            if (!GetIndexKey(it->get_str(), hashBytes, type)) {
                 throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid address");
             }
             addresses.push_back(std::make_pair(hashBytes, type));
@@ -508,7 +505,7 @@ bool timestampSort(std::pair<CMempoolAddressDeltaKey, CMempoolAddressDelta> a,
 UniValue getaddressmempool(const JSONRPCRequest& request)
 {
     if (request.fHelp || request.params.size() != 1)
-        throw runtime_error(
+        throw std::runtime_error(
                             "getaddressmempool\n"
                             "\nReturns all mempool deltas for an address (requires addressindex to be enabled).\n"
                             "\nArguments:\n"
@@ -579,7 +576,7 @@ UniValue getaddressmempool(const JSONRPCRequest& request)
 UniValue getaddressutxos(const JSONRPCRequest& request)
 {
     if (request.fHelp || request.params.size() != 1)
-        throw runtime_error(
+        throw std::runtime_error(
                             "getaddressutxos\n"
                             "\nReturns all unspent outputs for an address (requires addressindex to be enabled).\n"
                             "\nArguments:\n"
@@ -664,8 +661,8 @@ UniValue getaddressutxos(const JSONRPCRequest& request)
 
 UniValue getaddressdeltas(const JSONRPCRequest& request)
 {
-    if (request.fHelp || request.params.size() != 1 || !request.params[0].isObject())
-        throw runtime_error(
+    if (request.fHelp || request.params.size() != 1 || !request.params[0].isObject())   {
+        throw std::runtime_error(
                             "getaddressdeltas\n"
                             "\nReturns all changes for an address (requires addressindex to be enabled).\n"
                             "\nArguments:\n"
@@ -695,7 +692,6 @@ UniValue getaddressdeltas(const JSONRPCRequest& request)
         );
     }
 
-
     UniValue startValue = find_value(request.params[0].get_obj(), "start");
     UniValue endValue = find_value(request.params[0].get_obj(), "end");
 
@@ -724,8 +720,9 @@ UniValue getaddressdeltas(const JSONRPCRequest& request)
         throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid address");
     }
 
-    uint32_t updated_log_categories = g_logger->GetCategoryMask();
-    uint32_t changed_log_categories = original_log_categories ^ updated_log_categories;
+    // bitcore merge (MIPPL), Unused
+    //uint32_t updated_log_categories = g_logger->GetCategoryMask();
+    //uint32_t changed_log_categories = original_log_categories ^ updated_log_categories;
 
     std::vector<std::pair<CAddressIndexKey, CAmount> > addressIndex;
 
@@ -792,7 +789,7 @@ UniValue getaddressdeltas(const JSONRPCRequest& request)
 UniValue getaddressbalance(const JSONRPCRequest& request)
 {
     if (request.fHelp || request.params.size() != 1)
-        throw runtime_error(
+        throw std::runtime_error(
                             "getaddressbalance\n"
                             "\nReturns the balance for an address(es) (requires addressindex to be enabled).\n"
                             "\nArguments:\n"
@@ -847,7 +844,7 @@ UniValue getaddressbalance(const JSONRPCRequest& request)
 UniValue getaddresstxids(const JSONRPCRequest& request)
 {
     if (request.fHelp || request.params.size() != 1)
-        throw runtime_error(
+        throw std::runtime_error(
                             "getaddresstxids\n"
                             "\nReturns the txids for an address(es) (requires addressindex to be enabled).\n"
                             "\nArguments:\n"
@@ -931,7 +928,7 @@ UniValue getspentinfo(const JSONRPCRequest& request)
 {
     
     if (request.fHelp || request.params.size() != 1 || !request.params[0].isObject())
-        throw runtime_error(
+        throw std::runtime_error(
                             "getspentinfo\n"
                             "\nReturns the txid and index where an output is spent.\n"
                             "\nArguments:\n"
@@ -997,14 +994,14 @@ static const CRPCCommand commands[] =
     { "util",               "signmessagewithprivkey", &signmessagewithprivkey, {"privkey","message"} },
 
     /* Address index */
-    { "addressindex",       "getaddressmempool",      &getaddressmempool,      true,  {}},
-    { "addressindex",       "getaddressutxos",        &getaddressutxos,        false, {} },
-    { "addressindex",       "getaddressdeltas",       &getaddressdeltas,       false, {} },
-    { "addressindex",       "getaddresstxids",        &getaddresstxids,        false, {} },
-    { "addressindex",       "getaddressbalance",      &getaddressbalance,      false, {} },
+    { "addressindex",       "getaddressmempool",      &getaddressmempool,      {}},
+    { "addressindex",       "getaddressutxos",        &getaddressutxos,        {} },
+    { "addressindex",       "getaddressdeltas",       &getaddressdeltas,       {} },
+    { "addressindex",       "getaddresstxids",        &getaddresstxids,        {} },
+    { "addressindex",       "getaddressbalance",      &getaddressbalance,      {} },
     
     /* Blockchain */
-    { "blockchain",         "getspentinfo",           &getspentinfo,           false, {} },
+    { "blockchain",         "getspentinfo",           &getspentinfo,           {} },
     
     /* Not shown in help */
     { "hidden",             "setmocktime",            &setmocktime,            {"timestamp"}},

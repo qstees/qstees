@@ -41,6 +41,31 @@
 
 int32_t komodo_dpowconfs(int32_t height,int32_t numconfs);
 
+void ScriptPubKeyToJSON(const CScript& scriptPubKey, UniValue& out, bool fIncludeHex)
+{
+    txnouttype type;
+    std::vector<CTxDestination> addresses;
+    int nRequired;
+    
+    out.push_back(Pair("asm", ScriptToAsmStr(scriptPubKey)));
+    if (fIncludeHex)
+        out.push_back(Pair("hex", HexStr(scriptPubKey.begin(), scriptPubKey.end())));
+    
+    if (!ExtractDestinations(scriptPubKey, type, addresses, nRequired)) {
+        out.push_back(Pair("type", GetTxnOutputType(type)));
+        return;
+    }
+    
+    out.push_back(Pair("reqSigs", nRequired));
+    out.push_back(Pair("type", GetTxnOutputType(type)));
+    
+    UniValue a(UniValue::VARR);
+    for (const CTxDestination& addr : addresses) {
+        a.push_back(EncodeDestination(addr));
+    }
+    out.push_back(Pair("addresses", a));
+}
+
 void TxToJSONExpanded(const CTransaction& tx, const uint256 hashBlock, UniValue& entry,
                       int nHeight = 0, int nConfirmations = 0, int nBlockTime = 0)
 {
@@ -73,9 +98,9 @@ void TxToJSONExpanded(const CTransaction& tx, const uint256 hashBlock, UniValue&
                 in.push_back(Pair("value", ValueFromAmount(spentInfo.satoshis)));
                 in.push_back(Pair("valueSat", spentInfo.satoshis));
                 if (spentInfo.addressType == 1) {
-                    in.push_back(Pair("address", CTxDestination(CKeyID(spentInfo.addressHash)).ToString()));
+                    in.push_back(Pair("address", EncodeDestination(CKeyID(spentInfo.addressHash))));
                 } else if (spentInfo.addressType == 2)  {
-                    in.push_back(Pair("address", CTxDestination(CScriptID(spentInfo.addressHash)).ToString()));
+                    in.push_back(Pair("address", EncodeDestination(CScriptID(spentInfo.addressHash))));
                 }
             }
         }
@@ -277,8 +302,8 @@ static UniValue getrawtransaction(const JSONRPCRequest& request)
     }
 
     CTransactionRef tx;
-    
-    uint256 hash_block;
+    uint256 hashBlock;
+
     int nHeight = 0;
     int nConfirmations = 0;
     int nBlockTime = 0;

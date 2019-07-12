@@ -220,6 +220,23 @@ unsigned int CCoinsViewCache::GetCacheSize() const {
     return cacheCoins.size();
 }
 
+const Coin* CCoinsViewCache::AccessCoins(const COutPoint &outp) const {
+    CCoinsMap::const_iterator it = FetchCoin(outp);
+    if (it == cacheCoins.end()) {
+        return NULL;
+    } else {
+        return &it->second.coin;
+    }
+}
+
+const CTxOut &CCoinsViewCache::GetOutputFor(const CTxIn& input) const
+{
+    COutPoint outp(input.prevout.hash, input.prevout.n);
+    const Coin* coins = AccessCoins(outp);
+    assert(coins && !coins->IsSpent());
+    return coins->out;
+}
+
 CAmount CCoinsViewCache::GetValueIn(const CTransaction& tx, int valuationHeight) const
 {
     if (tx.IsCoinBase())
