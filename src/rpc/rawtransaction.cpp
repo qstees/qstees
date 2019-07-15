@@ -328,11 +328,13 @@ static UniValue getrawtransaction(const JSONRPCRequest& request)
         }
     }
 
+    UniValue hexValue = EncodeHexTx(*tx, RPCSerializationFlags());
     if (!fVerbose) {
-        return EncodeHexTx(*tx, RPCSerializationFlags());
+        return hexValue;
     }
 
     UniValue result(UniValue::VOBJ);
+    result.push_back(Pair("hex", hexValue));
     if (blockindex) result.pushKV("in_active_chain", in_active_chain);
     TxToJSONExpanded(*tx, hashBlock, result, nHeight, nConfirmations, nBlockTime);
     return result;
