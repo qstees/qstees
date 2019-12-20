@@ -29,3 +29,9 @@ CInfinitynode::CInfinitynode(const CInfinitynode& other) :
 CInfinitynode::CInfinitynode(int nProtocolVersionIn, COutPoint outpointBurnFund) :
     infinitynode_info_t{nProtocolVersionIn, GetAdjustedTime(), outpointBurnFund}
 {}
+
+infinitynode_info_t CInfinitynode::GetInfo()
+{
+    infinitynode_info_t info{*this};
+    return info;
+}

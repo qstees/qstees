@@ -10,6 +10,7 @@
 #include <script/standard.h>
 #include <flat-database.h>
 #include <utilstrencodings.h>
+#include <netbase.h>
 
 
 CInfinitynodeMan infnodeman;
@@ -253,7 +254,10 @@ bool CInfinitynodeMan::buildInfinitynodeList(int nBlockHeight, int nLowHeight)
                                 inf.setScriptPublicKey(prevScript);
                                 if (vSolutions.size() == 2){
                                     std::string backupAddress(vSolutions[1].begin(), vSolutions[1].end());
-                                    inf.setBackupAddress(backupAddress);
+                                    CTxDestination NodeAddress = DecodeDestination(backupAddress);
+                                    if (IsValidDestination(NodeAddress)) {
+                                        inf.setBackupAddress(backupAddress);
+                                    }
                                 }
                                 //SINType
                                 CAmount nBurnAmount = out.nValue / COIN + 1; //automaticaly round
@@ -288,6 +292,50 @@ bool CInfinitynodeMan::buildInfinitynodeList(int nBlockHeight, int nLowHeight)
                         //Amount to update Metadata
                         if (whichType == TX_BURN_DATA && Params().GetConsensus().cMetadataAddress == EncodeDestination(CKeyID(uint160(vSolutions[0]))))
                         {
+                            //Amount for UpdateMeta
+                            if (( Params().GetConsensus().nMasternodeBurnSINNODE_1 - 1) * COIN < out.nValue 
+                                && out.nValue <= Params().GetConsensus().nMasternodeBurnSINNODE_1 * COIN){
+                                if (vSolutions.size() == 2){
+                                    std::string metadata(vSolutions[1].begin(), vSolutions[1].end());
+                                    string s;
+                                    stringstream ss(metadata);
+                                    int i=0;
+                                    int check=0;
+                                    while (getline(ss, s,' ')) {
+                                        CTxDestination NodeAddress;
+                                        CService service;
+                                        //1st position: Node Address
+                                        if (i==0) {
+                                            NodeAddress = DecodeDestination(s);
+                                            if (IsValidDestination(NodeAddress)) {check++;}
+                                        }
+                                        //2nd position: Node IP
+                                        if (i==1 && Lookup(s.c_str(), service, 0, false)) {check++;}
+
+                                        //Update node metadata if nHeight is bigger
+                                        if (check == 2){
+                                            //prevBlockIndex->nHeight
+                                            const CTxIn& txin = tx->vin[0];
+                                            int index = txin.prevout.n;
+
+                                            CTransactionRef prevtx;
+                                            uint256 hashblock;
+                                            if(!GetTransaction(txin.prevout.hash, prevtx, Params().GetConsensus(), hashblock, false)) {
+                                                LogPrintf("CInfinitynodeMan::updateInfinityNodeInfo -- PrevBurnFund tx is not in block.\n");
+                                                return false;
+                                            }
+
+                                            CTxDestination addressBurnFund;
+                                            if(!ExtractDestination(prevtx->vout[index].scriptPubKey, addressBurnFund)){
+                                                LogPrintf("CInfinitynodeMan::updateInfinityNodeInfo -- False when extract payee from BurnFund tx.\n");
+                                                return false;
+                                            }
+                                            updateMetadata(EncodeDestination(addressBurnFund), EncodeDestination(NodeAddress), service, prevBlockIndex->nHeight);
+                                        }
+                                        i++;
+                                    }
+                                }
+                            }
                         }
                     } //end loop for all output
                 } else { //Coinbase tx => update mapLastPaid
@@ -324,6 +372,43 @@ bool CInfinitynodeMan::buildInfinitynodeList(int nBlockHeight, int nLowHeight)
 
     LogPrintf("CInfinitynodeMan::buildInfinitynodeList -- list infinity node was built from blockchain and has %d nodes\n", Count());
     return true;
+}
+
+bool CInfinitynodeMan::GetInfinitynodeInfo(std::string nodeowner, infinitynode_info_t& infInfoRet)
+{
+    LOCK(cs);
+    for (auto& infpair : mapInfinitynodes) {
+        if (infpair.second.collateralAddress == nodeowner) {
+            infInfoRet = infpair.second.GetInfo();
+            return true;
+        }
+    }
+    return false;
+}
+
+bool CInfinitynodeMan::GetInfinitynodeInfo(const COutPoint& outpoint, infinitynode_info_t& infInfoRet)
+{
+    LOCK(cs);
+    auto it = mapInfinitynodes.find(outpoint);
+    if (it == mapInfinitynodes.end()) {
+        return false;
+    }
+    infInfoRet = it->second.GetInfo();
+    return true;
+}
+
+void CInfinitynodeMan::updateMetadata(std::string nodeowner, std::string nodeAddress, CService nodeService, int nHeightUpdate)
+{
+    AssertLockHeld(cs);
+
+    for (auto& infpair : mapInfinitynodes) {
+        if (infpair.second.collateralAddress == nodeowner) {
+            if (infpair.second.getMetadataHeight() < nHeightUpdate){
+                infpair.second.setNodeAddress(nodeAddress);
+                infpair.second.setService(nodeService);
+            }
+        }
+    }
 }
 
 void CInfinitynodeMan::updateLastPaid()
