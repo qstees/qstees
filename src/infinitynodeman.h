@@ -18,8 +18,6 @@ extern CInfinitynodeMan infnodeman;
 
 class CInfinitynodeMan
 {
-public:
-
 private:
     static const std::string SERIALIZATION_VERSION_STRING;
 

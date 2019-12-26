@@ -94,6 +94,7 @@ public:
         consensus.nInfinityNodeBeginHeight=160000;
         consensus.nInfinityNodeGenesisStatement=250000;
         consensus.nInfinityNodeUpdateMeta=25;
+        consensus.nInfinityNodeVoteValue=1;
 
         consensus.nBudgetPaymentsStartBlock = 365 * 1440; // 1 common year
         consensus.nBudgetPaymentsCycleBlocks = 10958; // weekly

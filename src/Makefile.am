@@ -123,6 +123,7 @@ BITCOIN_CORE_H = \
   init.h \
   infinitynode.h \
   infinitynodeman.h \
+  infinitynodesrv.h \
   interfaces/handler.h \
   interfaces/node.h \
   interfaces/wallet.h \
@@ -301,6 +302,7 @@ libsin_server_a_SOURCES += \
   instantx.cpp \
   infinitynode.cpp \
   infinitynodeman.cpp \
+  infinitynodersv.cpp \
   leveldbwrapper.cpp \
   masternode.cpp \
   masternodeman.cpp \

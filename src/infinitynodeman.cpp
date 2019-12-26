@@ -3,6 +3,8 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <infinitynodeman.h>
+#include <infinitynodersv.h>
+
 #include <util.h> //fMasterNode variable
 #include <chainparams.h>
 #include <key_io.h>
@@ -210,6 +212,7 @@ bool CInfinitynodeMan::buildInfinitynodeList(int nBlockHeight, int nLowHeight)
     //first run, make sure that all variable is clear
     if (nLowHeight == Params().GetConsensus().nInfinityNodeBeginHeight){
         Clear();
+        infnodersv.Clear();
     } else {
         nLowHeight = nLastScanHeight;
     }
@@ -286,6 +289,35 @@ bool CInfinitynodeMan::buildInfinitynodeList(int nBlockHeight, int nLowHeight)
                                 } else {
                                     //non matured
                                     mapInfinitynodesNonMatured[inf.vinBurnFund.prevout] = inf;
+                                }
+                            }
+                            //Amount for vote
+                            if (out.nValue * 10 == Params().GetConsensus().nInfinityNodeVoteValue * COIN){
+                                if (vSolutions.size() == 2){
+                                    std::string voteOpinion(vSolutions[1].begin(), vSolutions[1].end());
+                                    if(voteOpinion.length() == 9){
+                                        std::string proposalID = voteOpinion.substr(0, 8);
+                                        bool opinion = false;
+                                        if( voteOpinion.substr(8, 1) == "1" ){opinion = true;}
+                                        //Address payee: we known that there is only 1 input
+                                        const CTxIn& txin = tx->vin[0];
+                                        int index = txin.prevout.n;
+
+                                        CTransactionRef prevtx;
+                                        uint256 hashblock;
+                                        if(!GetTransaction(txin.prevout.hash, prevtx, Params().GetConsensus(), hashblock, false)) {
+                                            LogPrintf("CInfinitynodeMan::updateInfinityNodeInfo -- PrevBurnFund tx is not in block.\n");
+                                            return false;
+                                        }
+
+                                        CTxDestination addressBurnFund;
+                                        if(!ExtractDestination(prevtx->vout[index].scriptPubKey, addressBurnFund)){
+                                            LogPrintf("CInfinitynodeMan::updateInfinityNodeInfo -- False when extract payee from BurnFund tx.\n");
+                                            return false;
+                                        }
+                                        CVote vote = CVote(proposalID, prevtx->vout[index].scriptPubKey, prevBlockIndex->nHeight, opinion);
+                                        infnodersv.Add(vote);
+                                    }
                                 }
                             }
                         }
@@ -446,9 +478,11 @@ bool CInfinitynodeMan::deterministicRewardStatement(int nSinType)
                 ++totalSinType;
             }
         }
+        /*TODO: fix if totalSinType > limit node*/
         //update variable for each SinType
         if (nSinType == 10)
         {
+            if(Params().GetConsensus().nLimitSINNODE_10 < totalSinType){totalSinType=Params().GetConsensus().nLimitSINNODE_10;}
             mapStatementBIG[stm_height_temp] = totalSinType;
             nBIGLastStmHeight = stm_height_temp;
             nBIGLastStmSize = totalSinType;
@@ -456,6 +490,7 @@ bool CInfinitynodeMan::deterministicRewardStatement(int nSinType)
 
         if (nSinType == 5)
         {
+            if(Params().GetConsensus().nLimitSINNODE_5 < totalSinType){totalSinType=Params().GetConsensus().nLimitSINNODE_5;}
             mapStatementMID[stm_height_temp] = totalSinType;
             nMIDLastStmHeight = stm_height_temp;
             nMIDLastStmSize = totalSinType;
@@ -463,6 +498,7 @@ bool CInfinitynodeMan::deterministicRewardStatement(int nSinType)
 
         if (nSinType == 1)
         {
+            if(Params().GetConsensus().nLimitSINNODE_1 < totalSinType){totalSinType=Params().GetConsensus().nLimitSINNODE_1;}
             mapStatementLIL[stm_height_temp] = totalSinType;
             nLILLastStmHeight = stm_height_temp;
             nLILLastStmSize = totalSinType;

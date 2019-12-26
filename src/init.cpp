@@ -73,6 +73,7 @@
 #include <sporkdb.h>
 //sinovate
 #include <infinitynodeman.h>
+#include <infinitynodersv.h>
 //
 
 #ifndef WIN32
@@ -270,6 +271,8 @@ void Shutdown()
     // Sinovate
     CFlatDB<CInfinitynodeMan> flatdb5("infinitynode.dat", "magicInfinityNodeCache");
     flatdb5.Dump(infnodeman);
+    CFlatDB<CInfinitynodersv> flatdb6("infinitynodersv.dat", "magicInfinityRSV");
+    flatdb6.Dump(infnodersv);
     //
 
     if (fFeeEstimatesInitialized)
@@ -1960,8 +1963,16 @@ bool AppInitMain()
     uiInterface.InitMessage(_("Loading on-chain infinitynode list..."));
     CFlatDB<CInfinitynodeMan> flatdb5(strDBName, "magicInfinityNodeCache");
     if(!flatdb5.Load(infnodeman)) {
-        return InitError(_("Failed to load masternode cache from") + "\n" + (pathDB / strDBName).string());
+        return InitError(_("Failed to load infinitynode cache from") + "\n" + (pathDB / strDBName).string());
     }
+
+    strDBName = "infinitynodersv.dat";
+    uiInterface.InitMessage(_("Loading infinitynode RSV..."));
+    CFlatDB<CInfinitynodersv> flatdb6(strDBName, "magicInfinityRSV");
+    if(!flatdb6.Load(infnodersv)) {
+        return InitError(_("Failed to load RSV vote cache from") + "\n" + (pathDB / strDBName).string());
+    }
+
     if (infnodeman.getLastScan() == 0){
         uiInterface.InitMessage(_("Initial on-chain infinitynode list..."));
         if ( chainActive.Height() < Params().GetConsensus().nInfinityNodeBeginHeight || infnodeman.initialInfinitynodeList(chainActive.Height()) == false){

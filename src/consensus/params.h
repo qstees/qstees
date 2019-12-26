@@ -70,6 +70,7 @@ struct Params {
     int nInfinityNodeBeginHeight;// integer
     int nInfinityNodeGenesisStatement;// integer
     int nInfinityNodeUpdateMeta;// integer
+    int nInfinityNodeVoteValue; // in coins
 
     int nInstantSendKeepLock; // in blocks
 

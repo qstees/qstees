@@ -14,6 +14,7 @@
 #include <masternodeconfig.h>
 #include <masternodeman.h>
 #include <infinitynodeman.h>
+#include <infinitynodersv.h>
 #ifdef ENABLE_WALLET
 #include <wallet/coincontrol.h>
 #endif // ENABLE_WALLET
@@ -805,18 +806,25 @@ UniValue infinitynode(const JSONRPCRequest& request)
 
     std::string strCommand;
     std::string strFilter = "";
+    std::string strOption = "";
 
     if (request.params.size() >= 1) {
         strCommand = request.params[0].get_str();
     }
     if (request.params.size() == 2) strFilter = request.params[1].get_str();
-    if (request.params.size() > 2)
+    if (request.params.size() == 3) {
+        strFilter = request.params[1].get_str();
+        strOption = request.params[2].get_str();
+    }
+    if (request.params.size() > 3)
             throw JSONRPCError(RPC_INVALID_PARAMETER, "Too many parameters");
 
     if (request.fHelp  ||
         (strCommand != "build-list" && strCommand != "show-lastscan" && strCommand != "show-infos" && strCommand != "stats"
                                     && strCommand != "show-lastpaid" && strCommand != "build-stm" && strCommand != "show-stm"
-                                    && strCommand != "show-candidate" && strCommand != "show-script"))
+                                    && strCommand != "show-candidate" && strCommand != "show-script" && strCommand != "show-proposal"
+                                    && strCommand != "scan-vote"
+        ))
             throw std::runtime_error(
                 "infinitynode \"command\"...\n"
                 "Set of commands to execute masternode related actions\n"
@@ -941,6 +949,37 @@ UniValue infinitynode(const JSONRPCRequest& request)
                 std::string strInfo = streamInfo.str();
                 obj.push_back(Pair(strOutpoint, strInfo));
         }
+        return obj;
+    }
+
+    if (strCommand == "show-proposal")
+    {
+        std::string proposalId  = strFilter;
+        std::vector<CVote>* v = infnodersv.Find(proposalId);
+        if(v != NULL){
+            obj.push_back(Pair("Votes", v->size()));
+        }else{
+            obj.push_back(Pair("Votes", "0"));
+        }
+        int mode = 0;
+        if (strOption == "public"){mode=0;}
+        if (strOption == "node"){mode=1;}
+        if (strOption == "all"){mode=2;}
+        obj.push_back(Pair("Yes", infnodersv.getResult(proposalId, true, mode)));
+        obj.push_back(Pair("No", infnodersv.getResult(proposalId, false, mode)));
+        return obj;
+    }
+
+    if (strCommand == "scan-vote")
+    {
+        CBlockIndex* pindex = NULL;
+        {
+                LOCK(cs_main);
+                pindex = chainActive.Tip();
+        }
+
+        bool result = infnodersv.rsvScan(pindex->nHeight);
+        obj.push_back(Pair("Result", result));
         return obj;
     }
 }
@@ -1250,6 +1289,124 @@ static UniValue infinitynodeupdatemeta(const JSONRPCRequest& request)
     return results;
 }
 
+
+static UniValue infinitynodevote(const JSONRPCRequest& request)
+{
+    std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
+    CWallet* const pwallet = wallet.get();
+
+    if (request.fHelp || request.params.size() != 3)
+       throw std::runtime_error(
+            "infinitynodevote AddressVote ProposalId [yes/no]"
+            "\nSend update info.\n"
+            "\nArguments:\n"
+            "1. \"AddressVote\"  (string, required) Address of vote.\n"
+            "2. \"ProposalId\"   (string, required) Vote for proposalId\n"
+            "3. \"[yes/no]\"            (string, required) opinion.\n"
+            "\nResult:\n"
+            "\"Vote information\"   (string) result of vote\n"
+            "\nExamples:\n"
+            + HelpExampleCli("infinitynodevote", "AddressVote ProposalId [yes/no]")
+        );
+    UniValue results(UniValue::VOBJ);
+
+    std::string strOwnerAddress = request.params[0].get_str();
+    CTxDestination INFAddress = DecodeDestination(strOwnerAddress);
+    if (!IsValidDestination(INFAddress)) {
+        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid SIN address: OwnerAddress");
+    }
+
+    std::string ProposalId = request.params[1].get_str();
+    bool has_only_digits = (ProposalId.find_first_not_of( "0123456789" ) == string::npos);
+    //if (!has_only_digits || ProposalId.size() != 8){
+    if (!has_only_digits || ProposalId != "00000001"){//it will be update at hardfork
+        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "ProposalID must be in format xxxxxxxx (8 digits) number.");
+    }
+
+    std::string opinion = request.params[2].get_str();
+    transform(opinion.begin(), opinion.end(), opinion.begin(), ::toupper);
+    std::string vote = "0";
+    if (opinion != "YES" && opinion != "NO"){
+        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Please give your opinion yes or no.");
+    }
+    if (opinion == "YES") {vote = "1";}
+
+    LOCK2(cs_main, pwallet->cs_wallet);
+    EnsureWalletIsUnlocked(pwallet);
+    // Make sure the results are valid at least up to the most recent block
+    // the user could have gotten from another RPC command prior to now
+    pwallet->BlockUntilSyncedToCurrentChain();
+
+    std::string strError;
+    std::vector<COutput> vPossibleCoins;
+    pwallet->AvailableCoins(vPossibleCoins, true, NULL, false, ALL_COINS);
+
+    // cBurnAddress
+    CTxDestination dest = DecodeDestination(Params().GetConsensus().cBurnAddress);
+    CScript scriptPubKeyBurnAddress = GetScriptForDestination(dest);
+    std::vector<std::vector<unsigned char> > vSolutions;
+    txnouttype whichType;
+    if (!Solver(scriptPubKeyBurnAddress, whichType, vSolutions))
+        return false;
+    CKeyID keyid = CKeyID(uint160(vSolutions[0]));
+
+    std::ostringstream streamInfo;
+
+    for (COutput& out : vPossibleCoins) {
+        CTxDestination address;
+        const CScript& scriptPubKey = out.tx->tx->vout[out.i].scriptPubKey;
+        bool fValidAddress = ExtractDestination(scriptPubKey, address);
+
+        if (!fValidAddress) continue;
+        if (EncodeDestination(INFAddress) != EncodeDestination(address)) continue;
+        //use coin with limit value 10k SIN
+        if (out.tx->tx->vout[out.i].nValue / COIN >= Params().GetConsensus().nInfinityNodeVoteValue
+            && out.tx->tx->vout[out.i].nValue / COIN < Params().GetConsensus().nInfinityNodeVoteValue*1000
+            && out.nDepth >= 2) {
+            CAmount nAmount = Params().GetConsensus().nInfinityNodeVoteValue*COIN;
+            mapValue_t mapValue;
+            bool fSubtractFeeFromAmount = false;
+            bool fUseInstantSend=false;
+            CCoinControl coin_control;
+            coin_control.Select(COutPoint(out.tx->GetHash(), out.i));
+
+            streamInfo << ProposalId << vote;
+            std::string strInfo = streamInfo.str();
+            CScript script;
+            script = GetScriptForBurn(keyid, request.params[1].get_str());
+
+            CReserveKey reservekey(pwallet);
+            CAmount nFeeRequired;
+            CAmount curBalance = pwallet->GetBalance();
+
+            std::vector<CRecipient> vecSend;
+            int nChangePosRet = -1;
+            CRecipient recipient = {script, nAmount, fSubtractFeeFromAmount};
+            vecSend.push_back(recipient);
+
+            results.push_back(Pair("Vote",streamInfo.str()));
+
+            CTransactionRef tx;
+            if (!pwallet->CreateTransaction(vecSend, tx, reservekey, nFeeRequired, nChangePosRet, strError, coin_control, true, ALL_COINS, fUseInstantSend)) {
+                if (!fSubtractFeeFromAmount && nAmount + nFeeRequired > curBalance)
+                    strError = strprintf("Error: This transaction requires a transaction fee of at least %s", FormatMoney(nFeeRequired));
+                throw JSONRPCError(RPC_WALLET_ERROR, strError);
+            }
+            CValidationState state;
+
+            if (!pwallet->CommitTransaction(tx, std::move(mapValue), {}, {}, reservekey, g_connman.get(),
+                            state, fUseInstantSend ? NetMsgType::TXLOCKREQUEST : NetMsgType::TX)) {
+                strError = strprintf("Error: The transaction was rejected! Reason given: %s", FormatStateMessage(state));
+                throw JSONRPCError(RPC_WALLET_ERROR, strError);
+            }
+
+            break; //immediat
+        }
+    }
+
+    return results;
+}
+
 UniValue mnsetup(const JSONRPCRequest& request)
 {
     if (request.fHelp || request.params.size() < 1)
@@ -1343,6 +1500,7 @@ static const CRPCCommand commands[] =
     { "SIN",                "infinitynodeburnfund",   &infinitynodeburnfund,   {"amount"} },
     { "SIN",                "infinitynodeupdatemeta", &infinitynodeupdatemeta, {"owner_address","node_address","IP"} },
     { "SIN",                "infinitynode",           &infinitynode,           {"command"}  },
+    { "SIN",                "infinitynodevote",       &infinitynodevote,       {"owner_address","proposalid","opinion"} }
 };
 
 void RegisterDashMasternodeRPCCommands(CRPCTable &t)
