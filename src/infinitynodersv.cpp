@@ -37,14 +37,29 @@ bool CInfinitynodersv::Has(std::string proposal)
 bool CInfinitynodersv::Add(CVote &vote)
 {
     LOCK(cs);
+    LogPrintf("CInfinitynodersv::new vote from %s %d\n", vote.getVoter().ToString(), vote.getHeight());
     auto it = mapProposalVotes.find(vote.getProposalId());
     if(it == mapProposalVotes.end()){
+        LogPrintf("CInfinitynodersv::1st vote from %s\n", vote.getVoter().ToString());
         mapProposalVotes[vote.getProposalId()].push_back(vote);
     } else {
+        LogPrintf("CInfinitynodersv::2nd vote from %s\n", vote.getVoter().ToString());
+        int i=0;
         for (auto& v : it->second){
             //added
-            if(v.getVoter() == vote.getVoter()){return false;}
+            if(v.getVoter() == vote.getVoter()){
+                if(v.getHeight() >= vote.getHeight()){
+                    LogPrintf("CInfinitynodersv::same voter from with low height %s\n", v.getVoter().ToString());
+                    return false;
+                }else{
+                    mapProposalVotes[vote.getProposalId()].erase (mapProposalVotes[vote.getProposalId()].begin()+i);
+                    mapProposalVotes[vote.getProposalId()].push_back(vote);
+                    return true;
+                }
+            }
+            i++;
         }
+        //not found the same voter ==> add
         mapProposalVotes[vote.getProposalId()].push_back(vote);
     }
     return true;

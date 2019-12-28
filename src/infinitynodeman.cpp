@@ -292,7 +292,7 @@ bool CInfinitynodeMan::buildInfinitynodeList(int nBlockHeight, int nLowHeight)
                                 }
                             }
                             //Amount for vote
-                            if (out.nValue * 10 == Params().GetConsensus().nInfinityNodeVoteValue * COIN){
+                            if (out.nValue == Params().GetConsensus().nInfinityNodeVoteValue * COIN){
                                 if (vSolutions.size() == 2){
                                     std::string voteOpinion(vSolutions[1].begin(), vSolutions[1].end());
                                     if(voteOpinion.length() == 9){

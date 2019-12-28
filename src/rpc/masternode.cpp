@@ -1254,7 +1254,7 @@ static UniValue infinitynodeupdatemeta(const JSONRPCRequest& request)
             streamInfo << strNodeAddress << ";" << strService;
             std::string strInfo = streamInfo.str();
             CScript script;
-            script = GetScriptForBurn(keyid, request.params[1].get_str());
+            script = GetScriptForBurn(keyid, streamInfo.str());
 
             CReserveKey reservekey(pwallet);
             CAmount nFeeRequired;
@@ -1369,11 +1369,12 @@ static UniValue infinitynodevote(const JSONRPCRequest& request)
             bool fUseInstantSend=false;
             CCoinControl coin_control;
             coin_control.Select(COutPoint(out.tx->GetHash(), out.i));
+            coin_control.destChange = INFAddress;
 
             streamInfo << ProposalId << vote;
             std::string strInfo = streamInfo.str();
             CScript script;
-            script = GetScriptForBurn(keyid, request.params[1].get_str());
+            script = GetScriptForBurn(keyid, streamInfo.str());
 
             CReserveKey reservekey(pwallet);
             CAmount nFeeRequired;
