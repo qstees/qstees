@@ -321,6 +321,39 @@ bool CInfinitynodeMan::buildInfinitynodeList(int nBlockHeight, int nLowHeight)
                                 }
                             }
                         }
+                        //Governance Vote Address
+                        if (whichType == TX_BURN_DATA && Params().GetConsensus().cGovernanceAddress == EncodeDestination(CKeyID(uint160(vSolutions[0]))))
+                        {
+                            //Amount for vote
+                            if (out.nValue == Params().GetConsensus().nInfinityNodeVoteValue * COIN){
+                                if (vSolutions.size() == 2){
+                                    std::string voteOpinion(vSolutions[1].begin(), vSolutions[1].end());
+                                    if(voteOpinion.length() == 9){
+                                        std::string proposalID = voteOpinion.substr(0, 8);
+                                        bool opinion = false;
+                                        if( voteOpinion.substr(8, 1) == "1" ){opinion = true;}
+                                        //Address payee: we known that there is only 1 input
+                                        const CTxIn& txin = tx->vin[0];
+                                        int index = txin.prevout.n;
+
+                                        CTransactionRef prevtx;
+                                        uint256 hashblock;
+                                        if(!GetTransaction(txin.prevout.hash, prevtx, Params().GetConsensus(), hashblock, false)) {
+                                            LogPrintf("CInfinitynodeMan::updateInfinityNodeInfo -- PrevBurnFund tx is not in block.\n");
+                                            return false;
+                                        }
+
+                                        CTxDestination addressBurnFund;
+                                        if(!ExtractDestination(prevtx->vout[index].scriptPubKey, addressBurnFund)){
+                                            LogPrintf("CInfinitynodeMan::updateInfinityNodeInfo -- False when extract payee from BurnFund tx.\n");
+                                            return false;
+                                        }
+                                        CVote vote = CVote(proposalID, prevtx->vout[index].scriptPubKey, prevBlockIndex->nHeight, opinion);
+                                        infnodersv.Add(vote);
+                                    }
+                                }
+                            }
+                        }
                         //Amount to update Metadata
                         if (whichType == TX_BURN_DATA && Params().GetConsensus().cMetadataAddress == EncodeDestination(CKeyID(uint160(vSolutions[0]))))
                         {

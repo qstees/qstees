@@ -1319,7 +1319,7 @@ static UniValue infinitynodevote(const JSONRPCRequest& request)
     std::string ProposalId = request.params[1].get_str();
     bool has_only_digits = (ProposalId.find_first_not_of( "0123456789" ) == string::npos);
     //if (!has_only_digits || ProposalId.size() != 8){
-    if (!has_only_digits || ProposalId != "00000001"){//it will be update at hardfork
+    if (!has_only_digits || ProposalId != "10000000"){//it will be update at hardfork
         throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "ProposalID must be in format xxxxxxxx (8 digits) number.");
     }
 
@@ -1342,7 +1342,7 @@ static UniValue infinitynodevote(const JSONRPCRequest& request)
     pwallet->AvailableCoins(vPossibleCoins, true, NULL, false, ALL_COINS);
 
     // cBurnAddress
-    CTxDestination dest = DecodeDestination(Params().GetConsensus().cBurnAddress);
+    CTxDestination dest = DecodeDestination(Params().GetConsensus().cGovernanceAddress);
     CScript scriptPubKeyBurnAddress = GetScriptForDestination(dest);
     std::vector<std::vector<unsigned char> > vSolutions;
     txnouttype whichType;
