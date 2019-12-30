@@ -93,6 +93,8 @@ public:
         consensus.nInstantSendKeepLock = 24;
         consensus.nInfinityNodeBeginHeight=160000;
         consensus.nInfinityNodeGenesisStatement=250000;
+        consensus.nInfinityNodeUpdateMeta=25;
+        consensus.nInfinityNodeVoteValue=100;
 
         consensus.nBudgetPaymentsStartBlock = 365 * 1440; // 1 common year
         consensus.nBudgetPaymentsCycleBlocks = 10958; // weekly
@@ -122,6 +124,7 @@ public:
         consensus.cBurnAddress = "SinBurnAddress123456789SuqaXbx3AMC";
         consensus.cMetadataAddress = "SinBurnAddressForMetadataXXXXEU2mj";
         consensus.cNotifyAddress = "SinBurnAddressForNotifyXXXXXc42TcT";
+        consensus.cGovernanceAddress = "SinBurnAddressGovernanceVoteba5vkQ";
         strSporkPubKey = "0449434681D96595AC04470E5613475D259489CAA79C260814D22D4F29F7361D84A85F1F535F7B11F51B87F4E7B8E168AA68747A6E7465DCF34ABDD25570430573";
 
         consensus.vDeployments[Consensus::DEPLOYMENT_TESTDUMMY].bit = 28;
@@ -227,6 +230,7 @@ public:
         consensus.nInstantSendKeepLock = 24;
         consensus.nInfinityNodeBeginHeight=100;
         consensus.nInfinityNodeGenesisStatement=110;
+        consensus.nInfinityNodeUpdateMeta=5;
 
         consensus.nBudgetPaymentsStartBlock = 365 * 1440; // 1 common year
         consensus.nBudgetPaymentsCycleBlocks = 10958; // weekly
@@ -345,6 +349,7 @@ public:
         consensus.nInstantSendKeepLock = 24;
         consensus.nInfinityNodeBeginHeight=100;
         consensus.nInfinityNodeGenesisStatement=110;
+        consensus.nInfinityNodeUpdateMeta=5;
 
         consensus.nBudgetPaymentsStartBlock = 365 * 1440; // 1 common year
         consensus.nBudgetPaymentsCycleBlocks = 10958; // weekly
@@ -453,6 +458,7 @@ public:
         consensus.nSubsidyHalvingInterval = 150;
         consensus.nInfinityNodeBeginHeight=100;
         consensus.nInfinityNodeGenesisStatement=110;
+        consensus.nInfinityNodeUpdateMeta=5;
 
         consensus.BIP16Exception = uint256();
         consensus.BIP34Height = 100000000;

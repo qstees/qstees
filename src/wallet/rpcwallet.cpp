@@ -492,6 +492,10 @@ static UniValue getaddressesbyaccount(const JSONRPCRequest& request)
     return ret;
 }
 
+static CTransactionRef PaymentInvoice(CWallet * const pwallet, const CTxDestination &address, CAmount nValue, std::string InvoiceInfo)
+{
+}
+
 static CTransactionRef SendMoney(CWallet * const pwallet, const CTxDestination &address, CAmount nValue, bool fSubtractFeeFromAmount, const CCoinControl& coin_control, mapValue_t mapValue, std::string fromAccount, int termDepositLength, bool fUseInstantSend=false)
 {
     CAmount curBalance = pwallet->GetBalance();
@@ -605,7 +609,7 @@ static UniValue exportaddressnewpass(const JSONRPCRequest& request)
 
     if (request.fHelp || request.params.size() != 2)
         throw std::runtime_error(
-            "exportsecuaddress SINAddress passphrase "
+            "exportaddressnewpass SINAddress passphrase "
             "\nExport an address.\n"
             "\nArguments:\n"
             "1. \"SINAddress\"  (string, required) The SIN address will be used in mobile.\n"
@@ -613,7 +617,7 @@ static UniValue exportaddressnewpass(const JSONRPCRequest& request)
             "\nResult:\n"
             "\"Encrypted String\"  (string) Encrypted privkey which will be imported in mobile\n"
             "\nExamples:\n"
-            + HelpExampleCli("exportsecuaddress", "YourSinAddress passphrase")
+            + HelpExampleCli("exportaddressnewpass", "SINAddress passphrase")
         );
 
     LOCK2(cs_main, pwallet->cs_wallet);
@@ -676,18 +680,39 @@ static UniValue exportaddressnewpass(const JSONRPCRequest& request)
     UniValue results(UniValue::VARR);
     UniValue entry(UniValue::VOBJ);
 
-    entry.push_back(Pair("SINAddress", EncodeDestination(dest)));
-    entry.push_back(Pair("PrivkeyHex", HexStr(vchSecret.begin(), vchSecret.end())));
-    entry.push_back(Pair("Privkeyvch", std::string(vchKey.begin(), vchKey.end())));
-    entry.push_back(Pair("PrivkeyString", keyString));
-    entry.push_back(Pair("Encrypted String", encryptedString));
-    entry.push_back(Pair("Passphrase", keyPassPhraseString));
+    //entry.push_back(Pair("PrivkeyHex", HexStr(vchSecret.begin(), vchSecret.end())));
+    //entry.push_back(Pair("Privkeyvch", std::string(vchKey.begin(), vchKey.end())));
+    //entry.push_back(Pair("PrivkeyString", keyString));
+    entry.push_back(Pair("address", EncodeDestination(dest)));
+    entry.push_back(Pair("cipherTxt", encryptedString));
     entry.push_back(Pair("vSalt", HexStr(kMasterKey.vchSalt)));
-    entry.push_back(Pair("nDeriveIterations", (int)kMasterKey.nDeriveIterations));
-    entry.push_back(Pair("nDerivationMethod", (int)kMasterKey.nDerivationMethod));
-    entry.push_back(Pair("Decrypted", tmp2));
-    results.push_back(entry);
+    entry.push_back(Pair("rounds", (int)kMasterKey.nDeriveIterations));
+    //entry.push_back(Pair("Passphrase", keyPassPhraseString));
+    //entry.push_back(Pair("nDerivationMethod", (int)kMasterKey.nDerivationMethod));
+    //entry.push_back(Pair("Decrypted", tmp2));
 
+
+    //KeyFile
+    std::ostringstream streamInfo;
+    streamInfo << "SINKeyFile_" << EncodeDestination(dest) << ".json";
+    boost::filesystem::path filepath = streamInfo.str();
+
+    filepath = boost::filesystem::absolute(filepath);
+    if (boost::filesystem::exists(filepath)) {
+        throw JSONRPCError(RPC_INVALID_PARAMETER, filepath.string() + " already exists. If you are sure this is what you want?");
+    }
+
+    std::ofstream file;
+    file.open(filepath.string().c_str());
+    if (!file.is_open())
+        throw JSONRPCError(RPC_INVALID_PARAMETER, "Cannot open wallet dump file");
+
+    file << strprintf("{\"address\": \"%s\", \"cipherTxt\": \"%s\", \"vSalt\": \"%s\", \"rounds\": %d}\n", EncodeDestination(dest), encryptedString, HexStr(kMasterKey.vchSalt), (int)kMasterKey.nDeriveIterations);
+    file.close();
+
+    entry.push_back(Pair("filename", filepath.string()));
+
+    results.push_back(entry);
     return results;
 }
 /**

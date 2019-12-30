@@ -18,8 +18,6 @@ extern CInfinitynodeMan infnodeman;
 
 class CInfinitynodeMan
 {
-public:
-
 private:
     static const std::string SERIALIZATION_VERSION_STRING;
 
@@ -95,6 +93,10 @@ public:
     bool AddUpdateLastPaid(CScript scriptPubKey, int nHeightLastPaid);
     /// Find an entry
     CInfinitynode* Find(const COutPoint& outpoint);
+
+    bool GetInfinitynodeInfo(std::string nodeowner, infinitynode_info_t& infInfoRet);
+    bool GetInfinitynodeInfo(const COutPoint& outpoint, infinitynode_info_t& infInfoRet);
+
     /// Clear InfinityNode vector
     void Clear();
     /// Versions of Find that are safe to use from outside the class
@@ -130,6 +132,7 @@ public:
     bool buildInfinitynodeList(int nBlockHeight, int nLowHeight = 165000);
     bool buildListForBlock(int nBlockHeight);
     void updateLastPaid();
+    void updateMetadata(std::string nodeowner, std::string nodeAddress, CService nodeService, int nHeightUpdate);
     bool updateInfinitynodeList(int fromHeight);//call in init.cppp
     bool initialInfinitynodeList(int fromHeight);//call in init.cpp
 

@@ -41,6 +41,9 @@ struct infinitynode_info_t
     CScript scriptPubKey{};
     std::string backupAddress = "BackupAddress";
     int nRank=0;
+    int nMetadataHeight=0;
+    std::string metadataNodeAddress = "NodeAddress";
+    CService metadataService{};
 };
 
 class CInfinitynode : public infinitynode_info_t
@@ -74,6 +77,9 @@ public:
         READWRITE(collateralAddress);
         READWRITE(scriptPubKey);
         READWRITE(backupAddress);
+        READWRITE(nMetadataHeight);
+        READWRITE(metadataNodeAddress);
+        READWRITE(metadataService);
     }
 
     void setHeight(int nInHeight){nHeight = nInHeight; nExpireHeight=nInHeight + 720*365;}
@@ -84,7 +90,11 @@ public:
     void setLastRewardHeight(int nReward){nLastRewardHeight = nReward;}
     void setRank(int nRankIn){nRank=nRankIn;}
     void setBackupAddress(std::string address) { backupAddress = address;}
+    void setNodeAddress(std::string address) { metadataNodeAddress = address;}
+    void setService(CService addrNew) { metadataService = addrNew;}
+    void setMetadataHeight(int nHeight) { nMetadataHeight = nHeight;}
 
+    infinitynode_info_t GetInfo();
     std::string getCollateralAddress(){return collateralAddress;}
     std::string getBackupAddress(){return backupAddress;}
     CScript getScriptPublicKey(){return scriptPubKey;}
@@ -92,8 +102,9 @@ public:
     int getExpireHeight(){return nExpireHeight ;}
     int getRoundBurnValue(){CAmount nBurnAmount = nBurnValue / COIN + 1; return nBurnAmount;}
     int getSINType(){return nSINType;}
-    int getLastRewardHeight(){return nLastRewardHeight;};
+    int getLastRewardHeight(){return nLastRewardHeight;}
     int getRank(){return nRank;}
+    int getMetadataHeight(){return nMetadataHeight;}
 
     CInfinitynode& operator=(CInfinitynode const& from)
     {
