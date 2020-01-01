@@ -957,7 +957,7 @@ UniValue infinitynode(const JSONRPCRequest& request)
         std::string proposalId  = strFilter;
         std::vector<CVote>* v = infnodersv.Find(proposalId);
         if(v != NULL){
-            obj.push_back(Pair("Votes", v->size()));
+            obj.push_back(Pair("Votes", (int)v->size()));
         }else{
             obj.push_back(Pair("Votes", "0"));
         }
