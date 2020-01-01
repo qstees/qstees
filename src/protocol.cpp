@@ -57,9 +57,6 @@ const char *MNANNOUNCE="mnb";
 const char *MNPING="mnp";
 const char *DSEG="dseg";
 const char *SYNCSTATUSCOUNT="ssc";
-const char *MNGOVERNANCESYNC="govsync";
-const char *MNGOVERNANCEOBJECT="govobj";
-const char *MNGOVERNANCEOBJECTVOTE="govobjvote";
 const char *MNVERIFY="mnv";
 } // namespace NetMsgType
 
@@ -106,9 +103,6 @@ const static std::string allNetMessageTypes[] = {
     NetMsgType::MNPING,
     NetMsgType::DSEG,
     NetMsgType::SYNCSTATUSCOUNT,
-    NetMsgType::MNGOVERNANCESYNC,
-    NetMsgType::MNGOVERNANCEOBJECT,
-    NetMsgType::MNGOVERNANCEOBJECTVOTE,
     NetMsgType::MNVERIFY,
 };
 const static std::vector<std::string> allNetMessageTypesVec(allNetMessageTypes, allNetMessageTypes+ARRAYLEN(allNetMessageTypes));
@@ -231,8 +225,6 @@ std::string CInv::GetCommand() const
     case MSG_MASTERNODE_QUORUM:        return cmd.append(NetMsgType::MNQUORUM);
     case MSG_MASTERNODE_ANNOUNCE:      return cmd.append(NetMsgType::MNANNOUNCE);
     case MSG_MASTERNODE_PING:          return cmd.append(NetMsgType::MNPING);
-    case MSG_GOVERNANCE_OBJECT:        return cmd.append(NetMsgType::MNGOVERNANCEOBJECT);
-    case MSG_GOVERNANCE_OBJECT_VOTE:   return cmd.append(NetMsgType::MNGOVERNANCEOBJECTVOTE);
     case MSG_MASTERNODE_VERIFY:        return cmd.append(NetMsgType::MNVERIFY);
     //
     default:

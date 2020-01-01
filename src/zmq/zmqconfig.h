@@ -19,9 +19,6 @@
 #include <primitives/block.h>
 #include <primitives/transaction.h>
 
-#include <governance-object.h>
-#include <governance-vote.h>
-
 #include <instantx.h>
 
 void zmqError(const char *str);

@@ -96,12 +96,12 @@ public:
         consensus.nInfinityNodeUpdateMeta=25;
         consensus.nInfinityNodeVoteValue=100;
 
-        consensus.nBudgetPaymentsStartBlock = 365 * 1440; // 1 common year
+        consensus.nBudgetPaymentsStartBlock = 365 * 1440 * 5; // 1 common year
         consensus.nBudgetPaymentsCycleBlocks = 10958; // weekly
         consensus.nBudgetPaymentsWindowBlocks = 100;
         consensus.nBudgetProposalEstablishingTime = 86400; // 1 day
 
-        consensus.nSuperblockStartBlock = 365 * 1440; // 1 common year
+        consensus.nSuperblockStartBlock = 365 * 1440 * 5; // 1 common year
         consensus.nSuperblockCycle = 10958; // weekly
 
         consensus.nGovernanceMinQuorum = 10;

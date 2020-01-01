@@ -8,8 +8,6 @@
 #include <zmq/zmqabstractnotifier.h>
 
 class CBlockIndex;
-class CGovernanceVote;
-class CGovernanceObject;
 
 class CZMQAbstractPublishNotifier : public CZMQAbstractNotifier
 {
@@ -48,18 +46,6 @@ public:
     bool NotifyTransactionLock(const CTransaction &transaction) override;
 };
 
-class CZMQPublishHashGovernanceVoteNotifier : public CZMQAbstractPublishNotifier
-{
-public:
-    bool NotifyGovernanceVote(const CGovernanceVote &vote) override;
-};
-
-class CZMQPublishHashGovernanceObjectNotifier : public CZMQAbstractPublishNotifier
-{
-public:
-    bool NotifyGovernanceObject(const CGovernanceObject &object) override;
-};
-
 class CZMQPublishHashInstantSendDoubleSpendNotifier : public CZMQAbstractPublishNotifier
 {
 public:
@@ -82,18 +68,6 @@ class CZMQPublishRawTransactionLockNotifier : public CZMQAbstractPublishNotifier
 {
 public:
     bool NotifyTransactionLock(const CTransaction &transaction) override;
-};
-
-class CZMQPublishRawGovernanceVoteNotifier : public CZMQAbstractPublishNotifier
-{
-public:
-    bool NotifyGovernanceVote(const CGovernanceVote &vote) override;
-};
-
-class CZMQPublishRawGovernanceObjectNotifier : public CZMQAbstractPublishNotifier
-{
-public:
-    bool NotifyGovernanceObject(const CGovernanceObject &object) override;
 };
 
 class CZMQPublishRawInstantSendDoubleSpendNotifier : public CZMQAbstractPublishNotifier

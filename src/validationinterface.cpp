@@ -21,8 +21,6 @@
 
 #include <boost/signals2/signal.hpp>
 
-#include <governance-vote.h>
-#include <governance-object.h>
 
 struct MainSignalsInstance {
     // Dash
@@ -51,8 +49,6 @@ struct MainSignalsInstance {
     boost::signals2::signal<void (const CBlockIndex *, const std::shared_ptr<const CBlock>&)> NewPoWValidBlock;
 
     // Dash
-    boost::signals2::signal<void (const CGovernanceVote &)> NotifyGovernanceVote;
-    boost::signals2::signal<void (const CGovernanceObject &)> NotifyGovernanceObject;
     boost::signals2::signal<void (const CTransaction &, const CTransaction &)> NotifyInstantSendDoubleSpendAttempt;
     //
 
@@ -126,8 +122,6 @@ void RegisterValidationInterface(CValidationInterface* pwalletIn) {
     g_signals.m_internals->NewPoWValidBlock.connect(boost::bind(&CValidationInterface::NewPoWValidBlock, pwalletIn, _1, _2));
 
     // Dash
-    g_signals.m_internals->NotifyGovernanceVote.connect(boost::bind(&CValidationInterface::NotifyGovernanceVote, pwalletIn, _1));
-    g_signals.m_internals->NotifyGovernanceObject.connect(boost::bind(&CValidationInterface::NotifyGovernanceObject, pwalletIn, _1));
     g_signals.m_internals->NotifyInstantSendDoubleSpendAttempt.connect(boost::bind(&CValidationInterface::NotifyInstantSendDoubleSpendAttempt, pwalletIn, _1, _2));
     //
 }
@@ -159,8 +153,6 @@ void UnregisterValidationInterface(CValidationInterface* pwalletIn) {
     g_signals.m_internals->NewPoWValidBlock.disconnect(boost::bind(&CValidationInterface::NewPoWValidBlock, pwalletIn, _1, _2));
     
     // Dash
-    g_signals.m_internals->NotifyGovernanceVote.disconnect(boost::bind(&CValidationInterface::NotifyGovernanceVote, pwalletIn, _1));
-    g_signals.m_internals->NotifyGovernanceObject.disconnect(boost::bind(&CValidationInterface::NotifyGovernanceObject, pwalletIn, _1));
     g_signals.m_internals->NotifyInstantSendDoubleSpendAttempt.disconnect(boost::bind(&CValidationInterface::NotifyInstantSendDoubleSpendAttempt, pwalletIn, _1, _2));
     //
 }
@@ -196,8 +188,6 @@ void UnregisterAllValidationInterfaces() {
     g_signals.m_internals->NewPoWValidBlock.disconnect_all_slots();
     
     // Dash
-    g_signals.m_internals->NotifyGovernanceVote.disconnect_all_slots();
-    g_signals.m_internals->NotifyGovernanceObject.disconnect_all_slots();
     g_signals.m_internals->NotifyInstantSendDoubleSpendAttempt.disconnect_all_slots();
     //
 }
@@ -301,18 +291,6 @@ void CMainSignals::NewPoWValidBlock(const CBlockIndex *pindex, const std::shared
 }
 
 //Dash misc
-void CMainSignals::NotifyGovernanceVote(const CGovernanceVote &vote) {
-    m_internals->m_schedulerClient.AddToProcessQueue([vote, this] {
-        m_internals->NotifyGovernanceVote(vote);
-    });
-}
-
-void CMainSignals::NotifyGovernanceObject(const CGovernanceObject &object) {
-    m_internals->m_schedulerClient.AddToProcessQueue([object, this] {
-        m_internals->NotifyGovernanceObject(object);
-    });
-}
-
 void CMainSignals::NotifyInstantSendDoubleSpendAttempt(const CTransaction &currentTx, const CTransaction &previousTx) {
     m_internals->m_schedulerClient.AddToProcessQueue([currentTx, previousTx, this] {
         m_internals->NotifyInstantSendDoubleSpendAttempt(currentTx, previousTx);
