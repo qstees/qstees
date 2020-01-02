@@ -1025,13 +1025,6 @@ static UniValue infinitynodeburnfund(const JSONRPCRequest& request)
         throw JSONRPCError(RPC_TYPE_ERROR, "Please wait until InfinityNode data is synced!");
     }
 
-    if (mnodeman.CountSinType(1) >= Params().GetConsensus().nLimitSINNODE_1 &&
-        mnodeman.CountSinType(5) >= Params().GetConsensus().nLimitSINNODE_5 &&
-        mnodeman.CountSinType(10) >= Params().GetConsensus().nLimitSINNODE_10)
-    {
-        throw JSONRPCError(RPC_TYPE_ERROR, "Number of INFINITYNODE is FULL");
-    }
-
     LOCK2(cs_main, pwallet->cs_wallet);
     EnsureWalletIsUnlocked(pwallet);
     // Make sure the results are valid at least up to the most recent block
@@ -1067,22 +1060,7 @@ static UniValue infinitynodeburnfund(const JSONRPCRequest& request)
         else if (sintype == 1) ++totalLIL;
         else ++totalUnknown;
     }
-    //Limit node
-    if ((nAmount == Params().GetConsensus().nMasternodeBurnSINNODE_1 * COIN && mnodeman.CountSinType(1) >= Params().GetConsensus().nLimitSINNODE_1) ||
-        (nAmount == Params().GetConsensus().nMasternodeBurnSINNODE_5 * COIN && mnodeman.CountSinType(5) >= Params().GetConsensus().nLimitSINNODE_5) ||
-        (nAmount == Params().GetConsensus().nMasternodeBurnSINNODE_10 * COIN && mnodeman.CountSinType(10) >= Params().GetConsensus().nLimitSINNODE_10) )
-    {
-        strError = strprintf("Error: Number of SINNODE for type %d is FULL", nAmount/COIN);
-        throw JSONRPCError(RPC_TYPE_ERROR, strError);
-    }
 
-    if ((nAmount == Params().GetConsensus().nMasternodeBurnSINNODE_1 * COIN && totalLIL >= Params().GetConsensus().nLimitSINNODE_1) ||
-        (nAmount == Params().GetConsensus().nMasternodeBurnSINNODE_5 * COIN && totalMID >= Params().GetConsensus().nLimitSINNODE_5) ||
-        (nAmount == Params().GetConsensus().nMasternodeBurnSINNODE_10 * COIN && totalBIG >= Params().GetConsensus().nLimitSINNODE_10) )
-    {
-        strError = strprintf("Error: Number of INFINITYNODE for type %d is FULL", nAmount/COIN);
-        throw JSONRPCError(RPC_TYPE_ERROR, strError);
-    }
     // BurnAddress
     CTxDestination dest = DecodeDestination(Params().GetConsensus().cBurnAddress);
     CScript scriptPubKeyBurnAddress = GetScriptForDestination(dest);

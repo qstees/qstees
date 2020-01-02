@@ -225,7 +225,11 @@ bool CInfinitynodeMan::buildInfinitynodeList(int nBlockHeight, int nLowHeight)
     CBlockIndex* pindex;
     pindex = LookupBlockIndex(blockHash);
     CBlockIndex* prevBlockIndex = pindex;
+
     int nLastPaidScanDeepth = max(Params().GetConsensus().nLimitSINNODE_1, max(Params().GetConsensus().nLimitSINNODE_5, Params().GetConsensus().nLimitSINNODE_10));
+    //at fork heigh, scan limit will change to 800 - each tier of SIN network will never go to this limit
+    if (nBlockHeight >= 350000){nLastPaidScanDeepth=800;}
+
     while (prevBlockIndex->nHeight >= nLowHeight)
     {
         CBlock blockReadFromDisk;
@@ -519,11 +523,9 @@ bool CInfinitynodeMan::deterministicRewardStatement(int nSinType)
                 ++totalSinType;
             }
         }
-        /*TODO: fix if totalSinType > limit node*/
-        //update variable for each SinType
+
         if (nSinType == 10)
         {
-            if(Params().GetConsensus().nLimitSINNODE_10 < totalSinType){totalSinType=Params().GetConsensus().nLimitSINNODE_10;}
             mapStatementBIG[stm_height_temp] = totalSinType;
             nBIGLastStmHeight = stm_height_temp;
             nBIGLastStmSize = totalSinType;
@@ -531,7 +533,6 @@ bool CInfinitynodeMan::deterministicRewardStatement(int nSinType)
 
         if (nSinType == 5)
         {
-            if(Params().GetConsensus().nLimitSINNODE_5 < totalSinType){totalSinType=Params().GetConsensus().nLimitSINNODE_5;}
             mapStatementMID[stm_height_temp] = totalSinType;
             nMIDLastStmHeight = stm_height_temp;
             nMIDLastStmSize = totalSinType;
@@ -539,7 +540,6 @@ bool CInfinitynodeMan::deterministicRewardStatement(int nSinType)
 
         if (nSinType == 1)
         {
-            if(Params().GetConsensus().nLimitSINNODE_1 < totalSinType){totalSinType=Params().GetConsensus().nLimitSINNODE_1;}
             mapStatementLIL[stm_height_temp] = totalSinType;
             nLILLastStmHeight = stm_height_temp;
             nLILLastStmSize = totalSinType;
