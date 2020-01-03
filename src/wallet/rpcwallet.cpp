@@ -44,26 +44,7 @@
 
 #include <functional>
 
-int32_t komodo_dpowconfs(int32_t height,int32_t numconfs);
 static const std::string WALLET_ENDPOINT_BASE = "/wallet/";
-
-int tx_height( const uint256 &hash ){
-    int nHeight = 0;
-    CTransactionRef tx;
-    uint256 hashBlock;
-    if (!GetTransaction(hash, tx, Params().GetConsensus(), hashBlock, true)) {
-        fprintf(stderr,"tx hash %s does not exist!\n", hash.ToString().c_str() );
-    }
-
-    BlockMap::const_iterator it = mapBlockIndex.find(hashBlock);
-    if (it != mapBlockIndex.end()) {
-        nHeight = it->second->nHeight;
-        //fprintf(stderr,"blockHash %s height %d\n",hashBlock.ToString().c_str(), nHeight);
-    } else {
-        fprintf(stderr,"block hash %s does not exist!\n", hashBlock.ToString().c_str() );
-    }
-    return nHeight;
-}
 
 bool GetWalletNameFromJSONRPCRequest(const JSONRPCRequest& request, std::string& wallet_name)
 {
@@ -116,7 +97,8 @@ void EnsureWalletIsUnlocked(CWallet * const pwallet)
 
 static void WalletTxToJSON(const CWalletTx& wtx, UniValue& entry)
 {
-    int confirms = wtx.GetDepthInMainChain();
+    int confirms = wtx.GetDepthInMainChain(false);
+    entry.pushKV("confirmations", confirms);
     bool fLocked = instantsend.IsLockedInstantSendTransaction(wtx.GetHash());
     entry.push_back(Pair("instantlock", fLocked));
     if (wtx.IsCoinBase())
@@ -126,11 +108,7 @@ static void WalletTxToJSON(const CWalletTx& wtx, UniValue& entry)
         entry.pushKV("blockhash", wtx.hashBlock.GetHex());
         entry.pushKV("blockindex", wtx.nIndex);
         entry.pushKV("blocktime", LookupBlockIndex(wtx.hashBlock)->GetBlockTime());
-        entry.pushKV("confirmations", komodo_dpowconfs((int32_t)mapBlockIndex[wtx.hashBlock]->nHeight,confirms));
-        entry.pushKV("rawconfirmations", confirms);
     } else {
-        entry.pushKV("confirmations", 0);
-        entry.pushKV("rawconfirmations", 0);
         entry.pushKV("trusted", wtx.IsTrusted());
     }
     uint256 hash = wtx.GetHash();
@@ -2062,11 +2040,9 @@ struct tallyitem
     int nConf;
     std::vector<uint256> txids;
     bool fIsWatchonly;
-    int nHeight;
     tallyitem()
     {
         nAmount = 0;
-        nHeight = 0;
         nConf = std::numeric_limits<int>::max();
         fIsWatchonly = false;
     }
@@ -2107,9 +2083,7 @@ static UniValue ListReceived(CWallet * const pwallet, const UniValue& params, bo
         if (wtx.IsCoinBase() || !CheckFinalTx(*wtx.tx))
             continue;
 
-        // Filter by dpowconfs, so returned data is all notarized
-        int nHeight = tx_height(pairWtx.first);
-        int nDepth = komodo_dpowconfs(nHeight, wtx.GetDepthInMainChain());
+        int nDepth = wtx.GetDepthInMainChain();
         if (nDepth < nMinDepth)
             continue;
 
@@ -2163,20 +2137,17 @@ static UniValue ListReceived(CWallet * const pwallet, const UniValue& params, bo
         CAmount nAmount = 0;
         int nConf = std::numeric_limits<int>::max();
         bool fIsWatchonly = false;
-        int nHeight = 0;
         if (it != mapTally.end())
         {
             nAmount = (*it).second.nAmount;
             nConf = (*it).second.nConf;
             fIsWatchonly = (*it).second.fIsWatchonly;
-            nHeight = (*it).second.nHeight;
         }
 
         if (by_label)
         {
             tallyitem& _item = label_tally[label];
             _item.nAmount += nAmount;
-            _item.nHeight = std::min(_item.nHeight, nHeight);
             _item.nConf = std::min(_item.nConf, nConf);
             _item.fIsWatchonly = fIsWatchonly;
         }
@@ -2188,8 +2159,7 @@ static UniValue ListReceived(CWallet * const pwallet, const UniValue& params, bo
             obj.pushKV("address",       EncodeDestination(address));
             obj.pushKV("account",       label);
             obj.pushKV("amount",        ValueFromAmount(nAmount));
-            obj.pushKV("rawconfirmations", (nConf == std::numeric_limits<int>::max() ? 0 : nConf));
-            obj.pushKV("confirmations", komodo_dpowconfs( nHeight, (nConf == std::numeric_limits<int>::max() ? 0 : nConf)));
+            obj.pushKV("confirmations", (nConf == std::numeric_limits<int>::max() ? 0 : nConf));
             obj.pushKV("label", label);
             UniValue transactions(UniValue::VARR);
             if (it != mapTally.end())
@@ -2209,15 +2179,13 @@ static UniValue ListReceived(CWallet * const pwallet, const UniValue& params, bo
         for (const auto& entry : label_tally)
         {
             CAmount nAmount = entry.second.nAmount;
-            int nConf   = entry.second.nConf;
-            int nHeight = entry.second.nHeight;
+            int nConf = entry.second.nConf;
             UniValue obj(UniValue::VOBJ);
             if (entry.second.fIsWatchonly)
                 obj.pushKV("involvesWatchonly", true);
             obj.pushKV("account",       entry.first);
             obj.pushKV("amount",        ValueFromAmount(nAmount));
-            obj.pushKV("confirmations", komodo_dpowconfs( nHeight, (nConf == std::numeric_limits<int>::max() ? 0 : nConf)));
-            obj.pushKV("rawconfirmations", (nConf == std::numeric_limits<int>::max() ? 0 : nConf));
+            obj.pushKV("confirmations", (nConf == std::numeric_limits<int>::max() ? 0 : nConf));
             obj.pushKV("label",         entry.first);
             ret.push_back(obj);
         }
@@ -2389,15 +2357,8 @@ static void ListTransactions(CWallet* const pwallet, const CWalletTx& wtx, const
         }
     }
 
-    int nConfs = wtx.GetDepthInMainChain();
-    // Filter by dpowconfs, so returned data is all notarized
-    if (nMinDepth > 1) {
-        int nHeight = tx_height(wtx.GetHash());
-        nConfs = komodo_dpowconfs(nHeight, nConfs);
-    }
-
     // Received
-    if (listReceived.size() > 0 && nConfs >= nMinDepth)
+    if (listReceived.size() > 0 && wtx.GetDepthInMainChain() >= nMinDepth)
     {
         for (const COutputEntry& r : listReceived)
         {
@@ -4080,8 +4041,7 @@ static UniValue listunspent(const JSONRPCRequest& request)
 
         entry.pushKV("scriptPubKey", HexStr(scriptPubKey.begin(), scriptPubKey.end()));
         entry.pushKV("amount", ValueFromAmount(out.tx->tx->vout[out.i].nValue));
-        entry.pushKV("confirmations", komodo_dpowconfs((int32_t)mapBlockIndex[out.tx->hashBlock]->nHeight,out.nDepth));
-        entry.pushKV("rawconfirmations", out.nDepth);
+        entry.pushKV("confirmations", out.nDepth);
         entry.pushKV("spendable", out.fSpendable);
         entry.pushKV("solvable", out.fSolvable);
         entry.pushKV("safe", out.fSafe);
