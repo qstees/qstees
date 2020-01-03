@@ -19,8 +19,8 @@
 # TODO: 1. upload status of node to server for survey
 #       2. chech status of node from explorer
 #
-#
-
+#explorer load balancing
+sleep $(( ( RANDOM % 240 )  + 30 ))
 # TELEGRAM CONFIGURATION
 #
 # Please edit Telegram.sh and add TOKEN and chatid for telegram to work.

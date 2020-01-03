@@ -45,7 +45,7 @@ QString BitcoinUnits::longName(int unit)
     case SIN: return QString("SIN");
     case mSIN: return QString("mSIN");
     case uSIN: return QString::fromUtf8("µSIN (bits)");
-    case SAT: return QString("Satoshi (sat)");
+    case SAT: return QString("Sintoshi (sat)");
     default: return QString("???");
     }
 }
@@ -67,7 +67,7 @@ QString BitcoinUnits::description(int unit)
     case SIN: return QString("Bitcoins");
     case mSIN: return QString("Milli-Bitcoins (1 / 1" THIN_SP_UTF8 "000)");
     case uSIN: return QString("Micro-Bitcoins (bits) (1 / 1" THIN_SP_UTF8 "000" THIN_SP_UTF8 "000)");
-    case SAT: return QString("Satoshi (sat) (1 / 100" THIN_SP_UTF8 "000" THIN_SP_UTF8 "000)");
+    case SAT: return QString("Sintoshi (sat) (1 / 100" THIN_SP_UTF8 "000" THIN_SP_UTF8 "000)");
     default: return QString("???");
     }
 }
@@ -159,7 +159,7 @@ QString BitcoinUnits::floorWithUnit(int unit, const CAmount& amount, bool plussi
     QString result = format(unit, amount, plussign, separators);
     if(decimals(unit) > digits) result.chop(decimals(unit) - digits);
 
-    return result + QString(" ") + "SIN";
+    return result + QString(" ") + shortName(unit);
 }
 
 QString BitcoinUnits::floorHtmlWithUnit(int unit, const CAmount& amount, bool plussign, SeparatorStyle separators)

@@ -591,7 +591,7 @@ static UniValue decryptAES(const JSONRPCRequest& request)
     entry.pushKV("vSalt", request.params[2].get_str());
     entry.pushKV("nDeriveIterations", nDeriveIterations);
     entry.pushKV("nDerivationMethod", nDerivationMethod);
-    entry.pushKV("Size", vchDecrypted.size());
+    entry.pushKV("Size", (int)vchDecrypted.size());
     entry.pushKV("Decrypted", decryptedText);
 
     return entry;

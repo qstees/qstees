@@ -1,0 +1,11 @@
+echo -------------------------------------------
+echo - Explorer Blockcount check
+echo -------------------------------------------
+echo
+echo "Current Wallet blockcount" && ./sin-cli getblockcount
+echo "Sinovate Explorer 1" && curl -s http://explorer.sinovate.io/api/getblockcount
+echo
+echo "Sinovate Explorer 2" && curl -s http://explorer2.sinovate.io/api/getblockcount
+echo
+echo "sin.ccore.online" && curl -s http://sin.ccore.online/api/getblockcount
+echo

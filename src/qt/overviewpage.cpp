@@ -139,14 +139,14 @@ OverviewPage::OverviewPage(const PlatformStyle *platformStyle, QWidget *parent) 
 {
     ui->setupUi(this);
     //ui->pushButton_Website->setIcon(QIcon(GUIUtil::getThemeImage(":/icons/website")));
-    ui->pushButton_Website->setStatusTip(tr("Sinovate Website"));
-    ui->pushButton_Discord->setStatusTip(tr("Sinovate Discord Channel"));
-    ui->pushButton_Telegram->setStatusTip(tr("Sinovate Telegram Channel"));
-    ui->pushButton_Twitter->setStatusTip(tr("Sinovate Twitter Channel"));
-    ui->pushButton_Explorer->setStatusTip(tr("Sinovate Block Explorer"));
-    ui->pushButton_Reddit->setStatusTip(tr("Sinovate Reddit"));
-    ui->pushButton_Facebook->setStatusTip(tr("Sinovate Facebook"));
-    ui->pushButton_Youtube->setStatusTip(tr("Sinovate Youtube Channel"));
+    ui->pushButton_Website->setStatusTip(tr("SINOVATE Website"));
+    ui->pushButton_Discord->setStatusTip(tr("SINOVATE Discord Channel"));
+    ui->pushButton_Telegram->setStatusTip(tr("SINOVATE Telegram Channel"));
+    ui->pushButton_Twitter->setStatusTip(tr("SINOVATE Twitter Channel"));
+    ui->pushButton_Explorer->setStatusTip(tr("SINOVATE Block Explorer"));
+    ui->pushButton_Reddit->setStatusTip(tr("SINOVATE Reddit"));
+    ui->pushButton_Facebook->setStatusTip(tr("SINOVATE Facebook"));
+    ui->pushButton_Youtube->setStatusTip(tr("SINOVATE Youtube Channel"));
 
 
     m_balances.balance = -1;

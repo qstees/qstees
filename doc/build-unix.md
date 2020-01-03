@@ -1,12 +1,12 @@
 UNIX BUILD NOTES
 ====================
-Some notes on how to build Bitcoin Core in Unix.
+Some notes on how to build SIN Core in Unix.
 
 (For BSD specific instructions, see `build-*bsd.md` in this directory.)
 
 Note
 ---------------------
-Always use absolute paths to configure and compile Bitcoin Core and the dependencies,
+Always use absolute paths to configure and compile SIN Core and the dependencies,
 for example, when specifying the path of the dependency:
 
 	../dist/configure --enable-cxx --disable-shared --with-pic --prefix=$BDB_PREFIX
@@ -18,8 +18,13 @@ To Build
 ---------------------
 
 ```bash
+git clone https://github.com/SINOVATEblockchain/SIN-core
+cd SIN-core/
+cd depends/
+make HOST=x86_64-linux-gnu
+cd ..
 ./autogen.sh
-./configure
+CONFIG_SITE=$PWD/depends/x86_64-linux-gnu/share/config.site ./configure --prefix=/ --disable-shared
 make
 make install # optional
 ```
@@ -249,8 +254,8 @@ Setup and Build Example: Arch Linux
 This example lists the steps necessary to setup and build a command line only, non-wallet distribution of the latest changes on Arch Linux:
 
     pacman -S git base-devel boost libevent python
-    git clone https://github.com/bitcoin/bitcoin.git
-    cd bitcoin/
+    git clone https://github.com/SINOVATEblockchain/SIN-core
+    cd SIN-core/
     ./autogen.sh
     ./configure --disable-wallet --without-gui --without-miniupnpc
     make check
@@ -275,12 +280,13 @@ Then, install the toolchain and curl:
     sudo apt-get install g++-arm-linux-gnueabihf curl
 
 To build executables for ARM:
-
+    git clone https://github.com/SINOVATEblockchain/SIN-core
+    cd SIN-core/
     cd depends
     make HOST=arm-linux-gnueabihf NO_QT=1
     cd ..
     ./autogen.sh
-    ./configure --prefix=$PWD/depends/arm-linux-gnueabihf --enable-glibc-back-compat --enable-reduce-exports LDFLAGS=-static-libstdc++
+    ./configure --prefix=$PWD/depends/arm-linux-gnueabihf --enable-glibc-back-compat --enable-reduce-exports LDFLAGS=-static-libstdc++ --disable-shared
     make
 
 
