@@ -2906,7 +2906,7 @@ int CWallet::CountInputsWithAmount(CAmount nInputAmount)
 
                 for (unsigned int i = 0; i < pcoin->tx->vout.size(); i++) {
                     COutput out = COutput(pcoin, i, nDepth, true, true, true); // SIN TODO: last bool is fSafe
-                    COutPoint outpoint = COutPoint(out.tx->GetHash(), out.i);
+                    //COutPoint outpoint = COutPoint(out.tx->GetHash(), out.i);
 
                     if(out.tx->tx->vout[out.i].nValue != nInputAmount) continue;
 

@@ -273,7 +273,7 @@ void CMasternodeMan::CheckAndRemoveLimitNumberNode(CConnman& connman, int nSinTy
 
     //at fork heigh, limit will very high, node will not removed
     if (nCachedBlockHeight >= 350000){nLimit=5000;}
-    if (vecSigTimeType.size() <= nLimit) return;
+    if ((int)vecSigTimeType.size() <= nLimit) return;
 
 	int count=0;
     for (std::pair<int64_t, CMasternode*>& p : vecSigTimeType){

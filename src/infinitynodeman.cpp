@@ -204,7 +204,11 @@ bool CInfinitynodeMan::updateInfinitynodeList(int nBlockHeight)
 
 bool CInfinitynodeMan::buildInfinitynodeList(int nBlockHeight, int nLowHeight)
 {
-    assert(nBlockHeight >= nLowHeight);
+    if(nBlockHeight < Params().GetConsensus().nInfinityNodeBeginHeight){
+        Clear();
+        infnodersv.Clear();
+        return true;
+    }
     AssertLockHeld(cs);
     mapInfinitynodesNonMatured.clear();
 
@@ -506,7 +510,6 @@ void CInfinitynodeMan::updateLastPaid()
 bool CInfinitynodeMan::deterministicRewardStatement(int nSinType)
 {
     int stm_height_temp = Params().GetConsensus().nInfinityNodeGenesisStatement;
-    int stm_size_temp = 0;
     if (nSinType == 10) mapStatementBIG.clear();
     if (nSinType == 5) mapStatementMID.clear();
     if (nSinType == 1) mapStatementLIL.clear();
@@ -547,7 +550,6 @@ bool CInfinitynodeMan::deterministicRewardStatement(int nSinType)
 
         //loop
         stm_height_temp = stm_height_temp + totalSinType;
-        stm_size_temp = totalSinType;
     }
     return true;
 }

@@ -799,11 +799,6 @@ UniValue sentinelping(const JSONRPCRequest& request)
 
 UniValue infinitynode(const JSONRPCRequest& request)
 {
-#ifdef ENABLE_WALLET
-    std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
-    CWallet* const pwallet = wallet.get();
-#endif // ENABLE_WALLET
-
     std::string strCommand;
     std::string strFilter = "";
     std::string strOption = "";
@@ -975,7 +970,6 @@ UniValue infinitynode(const JSONRPCRequest& request)
     {
         std::map<std::string, std::vector<CVote>> mapCopy = infnodersv.GetFullProposalVotesMap();
         obj.push_back(Pair("Proposal", mapCopy.size()));
-        int i=0;
         for (auto& infpair : mapCopy) {
             obj.push_back(Pair(infpair.first, infpair.second.size()));
         }
@@ -995,6 +989,7 @@ UniValue infinitynode(const JSONRPCRequest& request)
         obj.push_back(Pair("Result", result));
         return obj;
     }
+    return NullUniValue;
 }
 
 /**

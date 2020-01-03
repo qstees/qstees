@@ -470,10 +470,6 @@ static UniValue getaddressesbyaccount(const JSONRPCRequest& request)
     return ret;
 }
 
-static CTransactionRef PaymentInvoice(CWallet * const pwallet, const CTxDestination &address, CAmount nValue, std::string InvoiceInfo)
-{
-}
-
 static CTransactionRef SendMoney(CWallet * const pwallet, const CTxDestination &address, CAmount nValue, bool fSubtractFeeFromAmount, const CCoinControl& coin_control, mapValue_t mapValue, std::string fromAccount, int termDepositLength, bool fUseInstantSend=false)
 {
     CAmount curBalance = pwallet->GetBalance();
