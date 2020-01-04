@@ -451,6 +451,9 @@ bool CInfinitynodeMan::buildInfinitynodeList(int nBlockHeight, int nLowHeight)
     CFlatDB<CInfinitynodeMan> flatdb5("infinitynode.dat", "magicInfinityNodeCache");
     flatdb5.Dump(infnodeman);
 
+    CFlatDB<CInfinitynodersv> flatdb6("infinitynodersv.dat", "magicInfinityRSV");
+    flatdb6.Dump(infnodersv);
+
     LogPrintf("CInfinitynodeMan::buildInfinitynodeList -- list infinity node was built from blockchain and has %d nodes\n", Count());
     return true;
 }

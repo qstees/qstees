@@ -818,7 +818,7 @@ UniValue infinitynode(const JSONRPCRequest& request)
         (strCommand != "build-list" && strCommand != "show-lastscan" && strCommand != "show-infos" && strCommand != "stats"
                                     && strCommand != "show-lastpaid" && strCommand != "build-stm" && strCommand != "show-stm"
                                     && strCommand != "show-candidate" && strCommand != "show-script" && strCommand != "show-proposal"
-                                    && strCommand != "scan-vote" && strCommand != "show-votes"
+                                    && strCommand != "scan-vote" && strCommand != "show-proposals"
         ))
             throw std::runtime_error(
                 "infinitynode \"command\"...\n"
@@ -949,11 +949,14 @@ UniValue infinitynode(const JSONRPCRequest& request)
 
     if (strCommand == "show-proposal")
     {
+        if (request.params.size() < 2)
+            throw JSONRPCError(RPC_INVALID_PARAMETER, "Correct usage is 'infinitynode show-proposal \"ProposalId\" \"(Optional)Mode\" '");
+
         std::string proposalId  = strFilter;
-        std::vector<CVote>* v = infnodersv.Find(proposalId);
+        std::vector<CVote>* vVote = infnodersv.Find(proposalId);
         obj.push_back(Pair("ProposalId", proposalId));
-        if(v != NULL){
-            obj.push_back(Pair("Votes", (int)v->size()));
+        if(vVote != NULL){
+            obj.push_back(Pair("Votes", (int)vVote->size()));
         }else{
             obj.push_back(Pair("Votes", "0"));
         }
@@ -963,10 +966,15 @@ UniValue infinitynode(const JSONRPCRequest& request)
         if (strOption == "all"){mode=2;}
         obj.push_back(Pair("Yes", infnodersv.getResult(proposalId, true, mode)));
         obj.push_back(Pair("No", infnodersv.getResult(proposalId, false, mode)));
+        for (auto& v : *vVote){
+            CTxDestination addressVoter;
+            ExtractDestination(v.getVoter(), addressVoter);
+            obj.push_back(Pair(EncodeDestination(addressVoter), v.getOpinion()));
+        }
         return obj;
     }
 
-    if (strCommand == "show-votes")
+    if (strCommand == "show-proposals")
     {
         std::map<std::string, std::vector<CVote>> mapCopy = infnodersv.GetFullProposalVotesMap();
         obj.push_back(Pair("Proposal", mapCopy.size()));
@@ -987,6 +995,7 @@ UniValue infinitynode(const JSONRPCRequest& request)
 
         bool result = infnodersv.rsvScan(pindex->nHeight);
         obj.push_back(Pair("Result", result));
+        obj.push_back(Pair("Details", infnodersv.ToString()));
         return obj;
     }
     return NullUniValue;
