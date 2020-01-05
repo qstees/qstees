@@ -233,6 +233,8 @@ bool CInfinitynodeMan::buildInfinitynodeList(int nBlockHeight, int nLowHeight)
     int nLastPaidScanDeepth = max(Params().GetConsensus().nLimitSINNODE_1, max(Params().GetConsensus().nLimitSINNODE_5, Params().GetConsensus().nLimitSINNODE_10));
     //at fork heigh, scan limit will change to 800 - each tier of SIN network will never go to this limit
     if (nBlockHeight >= 350000){nLastPaidScanDeepth=800;}
+    //at begin of network
+    if (nLastPaidScanDeepth > nBlockHeight) {nLastPaidScanDeepth = nBlockHeight - 1;}
 
     while (prevBlockIndex->nHeight >= nLowHeight)
     {
