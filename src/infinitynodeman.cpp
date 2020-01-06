@@ -456,7 +456,7 @@ bool CInfinitynodeMan::buildInfinitynodeList(int nBlockHeight, int nLowHeight)
     CFlatDB<CInfinitynodersv> flatdb6("infinitynodersv.dat", "magicInfinityRSV");
     flatdb6.Dump(infnodersv);
 
-    LogPrintf("CInfinitynodeMan::buildInfinitynodeList -- list infinity node was built from blockchain and has %d nodes\n", Count());
+    LogPrintf("CInfinitynodeMan::buildInfinitynodeList -- list infinity node was built from blockchain at Height: %s\n", nBlockHeight);
     return true;
 }
 
@@ -531,6 +531,9 @@ bool CInfinitynodeMan::deterministicRewardStatement(int nSinType)
                 ++totalSinType;
             }
         }
+
+        //if no node of this type, then break condition
+        if (totalSinType == 0){stm_height_temp = nCachedBlockHeight;}
 
         if (nSinType == 10)
         {

@@ -1951,6 +1951,7 @@ bool AppInitMain()
         return InitError(_("Failed to load RSV vote cache from") + "\n" + (pathDB / strDBName).string());
     }
 
+    LogPrintf("InfinityNode last scan height: %d and active Height: %d\n", infnodeman.getLastScan(), chainActive.Height());
     if (infnodeman.getLastScan() == 0){
         uiInterface.InitMessage(_("Initial on-chain infinitynode list..."));
         if ( chainActive.Height() < Params().GetConsensus().nInfinityNodeBeginHeight || infnodeman.initialInfinitynodeList(chainActive.Height()) == false){
