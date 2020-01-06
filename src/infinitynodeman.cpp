@@ -216,6 +216,8 @@ bool CInfinitynodeMan::buildInfinitynodeList(int nBlockHeight, int nLowHeight)
     if (nLowHeight == Params().GetConsensus().nInfinityNodeBeginHeight){
         Clear();
         infnodersv.Clear();
+        //first run in testnet, scan to block number 1
+        if (Params().NetworkIDString() == CBaseChainParams::TESTNET) {nLowHeight = 1;}
     } else {
         nLowHeight = nLastScanHeight;
     }
@@ -241,6 +243,7 @@ bool CInfinitynodeMan::buildInfinitynodeList(int nBlockHeight, int nLowHeight)
         CBlock blockReadFromDisk;
         if (ReadBlockFromDisk(blockReadFromDisk, prevBlockIndex, Params().GetConsensus()))
         {
+LogPrintf("CInfinitynodeMan::updateInfinityNodeInfo -- read block number: %d, end at: %d.\n", prevBlockIndex->nHeight, nLowHeight);
             for (const CTransactionRef& tx : blockReadFromDisk.vtx) {
                 //Not coinbase
                 if (!tx->IsCoinBase()) {
