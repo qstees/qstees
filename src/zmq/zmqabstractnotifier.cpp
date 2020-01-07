@@ -26,16 +26,6 @@ bool CZMQAbstractNotifier::NotifyTransactionLock(const CTransaction &/*transacti
     return true;
 }
 
-bool CZMQAbstractNotifier::NotifyGovernanceVote(const CGovernanceVote& /*vote*/)
-{
-    return true;
-}
-
-bool CZMQAbstractNotifier::NotifyGovernanceObject(const CGovernanceObject& /*object*/)
-{
-    return true;
-}
-
 bool CZMQAbstractNotifier::NotifyInstantSendDoubleSpendAttempt(const CTransaction& /*currentTx*/, const CTransaction& /*previousTx*/)
 {
     return true;

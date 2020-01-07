@@ -57,7 +57,6 @@
 #include <activemasternode.h>
 #include <dsnotificationinterface.h>
 #include <flat-database.h>
-#include <governance.h>
 #include <instantx.h>
 #ifdef ENABLE_WALLET
 #include <keepass.h>
@@ -263,8 +262,6 @@ void Shutdown()
     flatdb1.Dump(mnodeman);
     CFlatDB<CMasternodePayments> flatdb2("mnpayments.dat", "magicMasternodePaymentsCache");
     flatdb2.Dump(mnpayments);
-    CFlatDB<CGovernanceManager> flatdb3("governance.dat", "magicGovernanceCache");
-    flatdb3.Dump(governance);
     CFlatDB<CNetFulfilledRequestManager> flatdb4("netfulfilled.dat", "magicFulfilledCache");
     flatdb4.Dump(netfulfilledman);
     //
@@ -1314,10 +1311,6 @@ void ThreadCheckInfinityNode(CConnman& connman)
             // make sure to check all masternodes first
             mnodeman.Check();
 
-            /*SIN TODO*/
-            //mnodeman.ProcessPendingMnbRequests(connman);
-            //mnodeman.ProcessPendingMnvRequests(connman);
-
             // check if we should activate or ping every few minutes,
             // slightly postpone first run to give net thread a chance to connect to some peers
             if(nTick % MASTERNODE_MIN_MNP_SECONDS == 15)
@@ -1326,7 +1319,6 @@ void ThreadCheckInfinityNode(CConnman& connman)
                 netfulfilledman.CheckAndRemove();
                 mnodeman.ProcessMasternodeConnections(connman);
                 mnodeman.CheckAndRemove(connman);
-                //mnodeman.WarnMasternodeDaemonUpdates();
                 mnpayments.CheckAndRemove();
                 instantsend.CheckAndRemove();
             }
@@ -1334,7 +1326,6 @@ void ThreadCheckInfinityNode(CConnman& connman)
                 mnodeman.DoFullVerificationStep(connman);
             }
             if(nTick % (60 * 5) == 0) {
-                //governance.DoMaintenance(connman);
                 infnodeman.CheckAndRemove(connman);
                 mnodeman.CheckAndRemoveBurnFundNotUniqueNode(connman);
                 mnodeman.CheckAndRemoveLimitNumberNode(connman, 1, Params().GetConsensus().nLimitSINNODE_1);
@@ -1892,7 +1883,7 @@ bool AppInitMain()
             int outputIndex;
             for (CMasternodeConfig::CMasternodeEntry mne : masternodeConfig.getEntries()) {
                 mnTxHash.SetHex(mne.getTxHash());
-                outputIndex = boost::lexical_cast<unsigned int>(mne.getOutputIndex());
+                outputIndex = atoi(mne.getOutputIndex());
                 COutPoint outpoint = COutPoint(mnTxHash, outputIndex);
                 // don't lock non-spendable outpoint (i.e. it's already spent or it's not from this wallet at all)
                 if(pwallet->IsMine(CTxIn(outpoint)) != ISMINE_SPENDABLE) {
@@ -1940,16 +1931,8 @@ bool AppInitMain()
         if(!flatdb2.Load(mnpayments)) {
             return InitError(_("Failed to load masternode payments cache from") + "\n" + (pathDB / strDBName).string());
         }
-
-        strDBName = "governance.dat";
-        uiInterface.InitMessage(_("Loading governance cache..."));
-        CFlatDB<CGovernanceManager> flatdb3(strDBName, "magicGovernanceCache");
-        if(!flatdb3.Load(governance)) {
-            return InitError(_("Failed to load governance cache from") + "\n" + (pathDB / strDBName).string());
-        }
-        governance.InitOnLoad();
     } else {
-        uiInterface.InitMessage(_("Masternode cache is empty, skipping payments and governance cache..."));
+        uiInterface.InitMessage(_("Masternode cache is empty, skipping payments cache..."));
     }
 
     strDBName = "netfulfilled.dat";

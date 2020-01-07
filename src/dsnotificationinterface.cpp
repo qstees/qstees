@@ -7,7 +7,6 @@
 #include <chainparams.h>
 #include <dsnotificationinterface.h>
 #include <instantx.h>
-#include <governance.h>
 #include <masternodeman.h>
 #include <infinitynodeman.h>
 #include <masternode-payments.h>
@@ -43,7 +42,6 @@ void CDSNotificationInterface::UpdatedBlockTip(const CBlockIndex *pindexNew, con
     infnodeman.UpdatedBlockTip(pindexNew);
     instantsend.UpdatedBlockTip(pindexNew);
     mnpayments.UpdatedBlockTip(pindexNew, connman);
-    governance.UpdatedBlockTip(pindexNew, connman);
 }
 
 void CDSNotificationInterface::SyncTransaction(const CTransaction &tx, const CBlockIndex *pindex, int posInBlock)

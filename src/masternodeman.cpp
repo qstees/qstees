@@ -6,7 +6,6 @@
 
 #include <activemasternode.h>
 #include <addrman.h>
-#include <governance.h>
 #include <masternode-payments.h>
 #include <masternode-sync.h>
 #include <masternodeman.h>
@@ -235,8 +234,6 @@ void CMasternodeMan::CheckAndRemoveBurnFundNotUniqueNode(CConnman& connman)
                     // erase all of the broadcasts we've seen from this txin, ...
                     mapSeenMasternodeBroadcast.erase(hash);
                     mWeAskedForMasternodeListEntry.erase(pmn.vin.prevout);
-                    // and finally remove it from the list
-                    it->second.FlagGovernanceItemsAsDirty();
                     mapMasternodes.erase(it);
 
                     LogPrint(BCLog::MASTERNODE, "CMasternodeMan::CheckAndRemoveBurnFundNotUniqueNode -- banning...%s\n", pmn.addr.ToString());
@@ -297,8 +294,6 @@ void CMasternodeMan::CheckAndRemoveLimitNumberNode(CConnman& connman, int nSinTy
             // erase all of the broadcasts we've seen from this txin, ...
             mapSeenMasternodeBroadcast.erase(hash);
             mWeAskedForMasternodeListEntry.erase(pmn.vin.prevout);
-            // and finally remove it from the list
-            it->second.FlagGovernanceItemsAsDirty();
             mapMasternodes.erase(it);
         }
 
@@ -335,9 +330,6 @@ void CMasternodeMan::CheckAndRemove(CConnman& connman)
                 // erase all of the broadcasts we've seen from this txin, ...
                 mapSeenMasternodeBroadcast.erase(hash);
                 mWeAskedForMasternodeListEntry.erase(it->first);
-
-                // and finally remove it from the list
-                it->second.FlagGovernanceItemsAsDirty();
                 mapMasternodes.erase(it++);
                 fMasternodesRemoved = true;
             } else {
@@ -1676,25 +1668,6 @@ bool CMasternodeMan::IsWatchdogActive()
     return (GetTime() - nLastWatchdogVoteTime) <= MASTERNODE_WATCHDOG_MAX_SECONDS;
 }
 
-bool CMasternodeMan::AddGovernanceVote(const COutPoint& outpoint, uint256 nGovernanceObjectHash)
-{
-    LOCK(cs);
-    CMasternode* pmn = Find(outpoint);
-    if(!pmn) {
-        return false;
-    }
-    pmn->AddGovernanceVote(nGovernanceObjectHash);
-    return true;
-}
-
-void CMasternodeMan::RemoveGovernanceObject(uint256 nGovernanceObjectHash)
-{
-    LOCK(cs);
-    for(auto& mnpair : mapMasternodes) {
-        mnpair.second.RemoveGovernanceObject(nGovernanceObjectHash);
-    }
-}
-
 void CMasternodeMan::CheckMasternode(const CPubKey& pubKeyMasternode, bool fForce)
 {
     LOCK2(cs_main, cs);
@@ -1758,14 +1731,6 @@ void CMasternodeMan::NotifyMasternodeUpdates(CConnman& connman)
         LOCK(cs);
         fMasternodesAddedLocal = fMasternodesAdded;
         fMasternodesRemovedLocal = fMasternodesRemoved;
-    }
-
-    if(fMasternodesAddedLocal) {
-        governance.CheckMasternodeOrphanObjects(connman);
-        governance.CheckMasternodeOrphanVotes(connman);
-    }
-    if(fMasternodesRemovedLocal) {
-        governance.UpdateCachesAndClean();
     }
 
     LOCK(cs);

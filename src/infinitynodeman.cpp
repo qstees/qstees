@@ -8,7 +8,6 @@
 #include <util.h> //fMasterNode variable
 #include <chainparams.h>
 #include <key_io.h>
-#include <util.h>
 #include <script/standard.h>
 #include <flat-database.h>
 #include <utilstrencodings.h>
@@ -315,6 +314,7 @@ bool CInfinitynodeMan::buildInfinitynodeList(int nBlockHeight, int nLowHeight)
                                             LogPrintf("CInfinitynodeMan::updateInfinityNodeInfo -- False when extract payee from BurnFund tx.\n");
                                             return false;
                                         }
+
                                         CVote vote = CVote(proposalID, prevtx->vout[index].scriptPubKey, prevBlockIndex->nHeight, opinion);
                                         infnodersv.Add(vote);
                                     }
@@ -328,6 +328,7 @@ bool CInfinitynodeMan::buildInfinitynodeList(int nBlockHeight, int nLowHeight)
                             if (out.nValue == Params().GetConsensus().nInfinityNodeVoteValue * COIN){
                                 if (vSolutions.size() == 2){
                                     std::string voteOpinion(vSolutions[1].begin(), vSolutions[1].end());
+                                    LogPrintf("CInfinitynodeMan::updateInfinityNodeInfo -- Extract vote at height: %d.\n", prevBlockIndex->nHeight);
                                     if(voteOpinion.length() == 9){
                                         std::string proposalID = voteOpinion.substr(0, 8);
                                         bool opinion = false;
@@ -342,14 +343,21 @@ bool CInfinitynodeMan::buildInfinitynodeList(int nBlockHeight, int nLowHeight)
                                             LogPrintf("CInfinitynodeMan::updateInfinityNodeInfo -- PrevBurnFund tx is not in block.\n");
                                             return false;
                                         }
-
                                         CTxDestination addressBurnFund;
                                         if(!ExtractDestination(prevtx->vout[index].scriptPubKey, addressBurnFund)){
                                             LogPrintf("CInfinitynodeMan::updateInfinityNodeInfo -- False when extract payee from BurnFund tx.\n");
                                             return false;
                                         }
-                                        CVote vote = CVote(proposalID, prevtx->vout[index].scriptPubKey, prevBlockIndex->nHeight, opinion);
-                                        infnodersv.Add(vote);
+                                        //we have all infos. Then add in map
+                                        if(prevBlockIndex->nHeight < pindex->nHeight - INF_MATURED_LIMIT) {
+                                            //matured
+	                                        LogPrintf("CInfinitynodeMan::updateInfinityNodeInfo -- Voter: %s, proposal: %s.\n", EncodeDestination(addressBurnFund), voteOpinion);
+                                            CVote vote = CVote(proposalID, prevtx->vout[index].scriptPubKey, prevBlockIndex->nHeight, opinion);
+                                            infnodersv.Add(vote);
+                                        } else {
+                                            //non matured
+                                            LogPrintf("CInfinitynodeMan::updateInfinityNodeInfo -- Non matured vote.\n");
+                                        }
                                     }
                                 }
                             }

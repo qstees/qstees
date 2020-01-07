@@ -214,14 +214,6 @@ BITCOIN_CORE_H += \
   cachemultimap.h \
   dsnotificationinterface.h \
   flat-database.h \
-  governance.h \
-  governance-classes.h \
-  governance-exceptions.h \
-  governance-misc.h \
-  governance-object.h \
-  governance-validators.h \
-  governance-vote.h \
-  governance-votedb.h \
   instantx.h \
   keepass.h \
   leveldbwrapper.h \
@@ -289,16 +281,10 @@ libsin_server_a_SOURCES = \
   versionbits.cpp \
   $(BITCOIN_CORE_H)
 
-# dash server
+# dash-SIN server
 libsin_server_a_SOURCES += \
   activemasternode.cpp \
   dsnotificationinterface.cpp \
-  governance.cpp \
-  governance-classes.cpp \
-  governance-object.cpp \
-  governance-validators.cpp \
-  governance-vote.cpp \
-  governance-votedb.cpp \
   instantx.cpp \
   infinitynode.cpp \
   infinitynodeman.cpp \
@@ -311,7 +297,6 @@ libsin_server_a_SOURCES += \
   masternodeconfig.cpp \
   messagesigner.cpp \
   netfulfilledman.cpp \
-  rpc/governance.cpp \
   rpc/masternode.cpp \
   spork.cpp \
   sporkdb.cpp

@@ -823,7 +823,7 @@ UniValue infinitynode(const JSONRPCRequest& request)
         (strCommand != "build-list" && strCommand != "show-lastscan" && strCommand != "show-infos" && strCommand != "stats"
                                     && strCommand != "show-lastpaid" && strCommand != "build-stm" && strCommand != "show-stm"
                                     && strCommand != "show-candidate" && strCommand != "show-script" && strCommand != "show-proposal"
-                                    && strCommand != "scan-vote"
+                                    && strCommand != "scan-vote" && strCommand != "show-votes"
         ))
             throw std::runtime_error(
                 "infinitynode \"command\"...\n"
@@ -956,6 +956,7 @@ UniValue infinitynode(const JSONRPCRequest& request)
     {
         std::string proposalId  = strFilter;
         std::vector<CVote>* v = infnodersv.Find(proposalId);
+        obj.push_back(Pair("ProposalId", proposalId));
         if(v != NULL){
             obj.push_back(Pair("Votes", v->size()));
         }else{
@@ -967,6 +968,18 @@ UniValue infinitynode(const JSONRPCRequest& request)
         if (strOption == "all"){mode=2;}
         obj.push_back(Pair("Yes", infnodersv.getResult(proposalId, true, mode)));
         obj.push_back(Pair("No", infnodersv.getResult(proposalId, false, mode)));
+        return obj;
+    }
+
+    if (strCommand == "show-votes")
+    {
+        std::map<std::string, std::vector<CVote>> mapCopy = infnodersv.GetFullProposalVotesMap();
+        obj.push_back(Pair("Proposal", mapCopy.size()));
+        int i=0;
+        for (auto& infpair : mapCopy) {
+            obj.push_back(Pair(infpair.first, infpair.second.size()));
+        }
+
         return obj;
     }
 
@@ -1309,6 +1322,7 @@ static UniValue infinitynodevote(const JSONRPCRequest& request)
             + HelpExampleCli("infinitynodevote", "AddressVote ProposalId [yes/no]")
         );
     UniValue results(UniValue::VOBJ);
+    std::string strError = "";
 
     std::string strOwnerAddress = request.params[0].get_str();
     CTxDestination INFAddress = DecodeDestination(strOwnerAddress);
@@ -1320,7 +1334,8 @@ static UniValue infinitynodevote(const JSONRPCRequest& request)
     bool has_only_digits = (ProposalId.find_first_not_of( "0123456789" ) == string::npos);
     //if (!has_only_digits || ProposalId.size() != 8){
     if (!has_only_digits || ProposalId != "10000000"){//it will be update at hardfork
-        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "ProposalID must be in format xxxxxxxx (8 digits) number.");
+        strError = strprintf("ProposalID %s must be in format xxxxxxxx (8 digits) number.", ProposalId);
+        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, strError);
     }
 
     std::string opinion = request.params[2].get_str();
@@ -1337,7 +1352,6 @@ static UniValue infinitynodevote(const JSONRPCRequest& request)
     // the user could have gotten from another RPC command prior to now
     pwallet->BlockUntilSyncedToCurrentChain();
 
-    std::string strError;
     std::vector<COutput> vPossibleCoins;
     pwallet->AvailableCoins(vPossibleCoins, true, NULL, false, ALL_COINS);
 

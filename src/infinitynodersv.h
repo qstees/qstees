@@ -90,6 +90,8 @@ public:
     bool Add(CVote &vote);
     bool Has(std::string proposal);
     std::vector<CVote>* Find(std::string proposal);
+    std::map<std::string, std::vector<CVote>> GetFullProposalVotesMap() { return mapProposalVotes; }
+
     int getResult(std::string proposal, bool opinion, int mode = 0);
     bool rsvScan(int nHeight);
 

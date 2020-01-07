@@ -43,7 +43,6 @@ bool CInfinitynodersv::Add(CVote &vote)
         LogPrintf("CInfinitynodersv::1st vote from %s\n", vote.getVoter().ToString());
         mapProposalVotes[vote.getProposalId()].push_back(vote);
     } else {
-        LogPrintf("CInfinitynodersv::2nd vote from %s\n", vote.getVoter().ToString());
         int i=0;
         for (auto& v : it->second){
             //added
@@ -52,6 +51,7 @@ bool CInfinitynodersv::Add(CVote &vote)
                     LogPrintf("CInfinitynodersv::same voter from with low height %s\n", v.getVoter().ToString());
                     return false;
                 }else{
+                    LogPrintf("CInfinitynodersv::new vote from higher height %s\n", vote.getVoter().ToString());
                     mapProposalVotes[vote.getProposalId()].erase (mapProposalVotes[vote.getProposalId()].begin()+i);
                     mapProposalVotes[vote.getProposalId()].push_back(vote);
                     return true;
@@ -60,6 +60,7 @@ bool CInfinitynodersv::Add(CVote &vote)
             i++;
         }
         //not found the same voter ==> add
+        LogPrintf("CInfinitynodersv::new vote from %s for proposal %s\n", vote.getVoter().ToString(), vote.getProposalId());
         mapProposalVotes[vote.getProposalId()].push_back(vote);
     }
     return true;
@@ -116,7 +117,7 @@ bool CInfinitynodersv::rsvScan(int nBlockHeight)
     CBlockIndex* pindex;
     pindex = LookupBlockIndex(blockHash);
     CBlockIndex* prevBlockIndex = pindex;
-    int nLastPaidScanDeepth = max(Params().GetConsensus().nLimitSINNODE_1, max(Params().GetConsensus().nLimitSINNODE_5, Params().GetConsensus().nLimitSINNODE_10));
+
     while (prevBlockIndex->nHeight >= INFINITYNODE_RSV_BEGIN)
     {
         CBlock blockReadFromDisk;
@@ -132,7 +133,7 @@ bool CInfinitynodersv::rsvScan(int nBlockHeight)
                         const CScript& prevScript = out.scriptPubKey;
                         Solver(prevScript, whichType, vSolutions);
                         //Send to BurnAddress
-                        if (whichType == TX_BURN_DATA && Params().GetConsensus().cBurnAddress == EncodeDestination(CKeyID(uint160(vSolutions[0]))))
+                        if (whichType == TX_BURN_DATA && Params().GetConsensus().cGovernanceAddress == EncodeDestination(CKeyID(uint160(vSolutions[0]))))
                         {
                             //Amount for vote
                             if (out.nValue * 10 == Params().GetConsensus().nInfinityNodeVoteValue * COIN){

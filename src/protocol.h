@@ -255,9 +255,6 @@ extern const char *MNANNOUNCE;
 extern const char *MNPING;
 extern const char *DSEG;
 extern const char *SYNCSTATUSCOUNT;
-extern const char *MNGOVERNANCESYNC;
-extern const char *MNGOVERNANCEOBJECT;
-extern const char *MNGOVERNANCEOBJECTVOTE;
 extern const char *MNVERIFY;
 };
 
@@ -408,8 +405,6 @@ enum GetDataMsg
     MSG_MASTERNODE_ANNOUNCE = 11,
     MSG_MASTERNODE_PING = 12,
     //MSG_DSTX = 13,
-    MSG_GOVERNANCE_OBJECT = 14,
-    MSG_GOVERNANCE_OBJECT_VOTE = 15,
     MSG_MASTERNODE_VERIFY = 16,
     // Witness flagged messages
     MSG_WITNESS_BLOCK = MSG_BLOCK | MSG_WITNESS_FLAG, //!< Defined in BIP144
