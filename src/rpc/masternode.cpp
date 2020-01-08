@@ -977,9 +977,9 @@ UniValue infinitynode(const JSONRPCRequest& request)
     if (strCommand == "show-proposals")
     {
         std::map<std::string, std::vector<CVote>> mapCopy = infnodersv.GetFullProposalVotesMap();
-        obj.push_back(Pair("Proposal", mapCopy.size()));
+        obj.push_back(Pair("Proposal", (int)mapCopy.size()));
         for (auto& infpair : mapCopy) {
-            obj.push_back(Pair(infpair.first, infpair.second.size()));
+            obj.push_back(Pair(infpair.first, (int)infpair.second.size()));
         }
 
         return obj;
