@@ -37,9 +37,6 @@
 #include <stdint.h>
 
 #include <univalue.h>
-#include "komodo_validation017.h"
-
-int32_t komodo_dpowconfs(int32_t height,int32_t numconfs);
 
 static void TxToJSON(const CTransaction& tx, const uint256 hashBlock, UniValue& entry)
 {
@@ -57,13 +54,11 @@ static void TxToJSON(const CTransaction& tx, const uint256 hashBlock, UniValue& 
         CBlockIndex* pindex = LookupBlockIndex(hashBlock);
         if (pindex) {
             if (chainActive.Contains(pindex)) {
-                int64_t confirmations = 1 + chainActive.Height() - pindex->nHeight;
-                entry.pushKV("confirmations", komodo_dpowconfs(pindex->nHeight,confirmations));
+                entry.pushKV("confirmations", 1 + chainActive.Height() - pindex->nHeight);
                 entry.pushKV("time", pindex->GetBlockTime());
                 entry.pushKV("blocktime", pindex->GetBlockTime());
             } else {
                 entry.pushKV("confirmations", 0);
-                entry.pushKV("rawconfirmations", 0);
             }
         }
     }
@@ -136,8 +131,7 @@ static UniValue getrawtransaction(const JSONRPCRequest& request)
             "     ,...\n"
             "  ],\n"
             "  \"blockhash\" : \"hash\",   (string) the block hash\n"
-            "  \"confirmations\" : n,      (numeric) The number of notarized confirmations\n"
-            "  \"rawconfirmations\" : n,   (numeric) The number of raw confirmations\n"
+            "  \"confirmations\" : n,      (numeric) The confirmations\n"
             "  \"time\" : ttt,             (numeric) The transaction time in seconds since epoch (Jan 1 1970 GMT)\n"
             "  \"blocktime\" : ttt         (numeric) The block time in seconds since epoch (Jan 1 1970 GMT)\n"
             "}\n"

@@ -8,7 +8,6 @@
 #include <util.h> //fMasterNode variable
 #include <chainparams.h>
 #include <key_io.h>
-#include <util.h>
 #include <script/standard.h>
 #include <flat-database.h>
 #include <utilstrencodings.h>
@@ -205,7 +204,11 @@ bool CInfinitynodeMan::updateInfinitynodeList(int nBlockHeight)
 
 bool CInfinitynodeMan::buildInfinitynodeList(int nBlockHeight, int nLowHeight)
 {
-    assert(nBlockHeight >= nLowHeight);
+    if(nBlockHeight < Params().GetConsensus().nInfinityNodeBeginHeight){
+        Clear();
+        infnodersv.Clear();
+        return true;
+    }
     AssertLockHeld(cs);
     mapInfinitynodesNonMatured.clear();
 
@@ -213,6 +216,8 @@ bool CInfinitynodeMan::buildInfinitynodeList(int nBlockHeight, int nLowHeight)
     if (nLowHeight == Params().GetConsensus().nInfinityNodeBeginHeight){
         Clear();
         infnodersv.Clear();
+        //first run in testnet, scan to block number 1
+        if (Params().NetworkIDString() == CBaseChainParams::TESTNET) {nLowHeight = 1;}
     } else {
         nLowHeight = nLastScanHeight;
     }
@@ -226,12 +231,19 @@ bool CInfinitynodeMan::buildInfinitynodeList(int nBlockHeight, int nLowHeight)
     CBlockIndex* pindex;
     pindex = LookupBlockIndex(blockHash);
     CBlockIndex* prevBlockIndex = pindex;
+
     int nLastPaidScanDeepth = max(Params().GetConsensus().nLimitSINNODE_1, max(Params().GetConsensus().nLimitSINNODE_5, Params().GetConsensus().nLimitSINNODE_10));
+    //at fork heigh, scan limit will change to 800 - each tier of SIN network will never go to this limit
+    if (nBlockHeight >= 350000){nLastPaidScanDeepth=800;}
+    //at begin of network
+    if (nLastPaidScanDeepth > nBlockHeight) {nLastPaidScanDeepth = nBlockHeight - 1;}
+
     while (prevBlockIndex->nHeight >= nLowHeight)
     {
         CBlock blockReadFromDisk;
         if (ReadBlockFromDisk(blockReadFromDisk, prevBlockIndex, Params().GetConsensus()))
         {
+LogPrintf("CInfinitynodeMan::updateInfinityNodeInfo -- read block number: %d, end at: %d.\n", prevBlockIndex->nHeight, nLowHeight);
             for (const CTransactionRef& tx : blockReadFromDisk.vtx) {
                 //Not coinbase
                 if (!tx->IsCoinBase()) {
@@ -315,6 +327,7 @@ bool CInfinitynodeMan::buildInfinitynodeList(int nBlockHeight, int nLowHeight)
                                             LogPrintf("CInfinitynodeMan::updateInfinityNodeInfo -- False when extract payee from BurnFund tx.\n");
                                             return false;
                                         }
+
                                         CVote vote = CVote(proposalID, prevtx->vout[index].scriptPubKey, prevBlockIndex->nHeight, opinion);
                                         infnodersv.Add(vote);
                                     }
@@ -328,6 +341,7 @@ bool CInfinitynodeMan::buildInfinitynodeList(int nBlockHeight, int nLowHeight)
                             if (out.nValue == Params().GetConsensus().nInfinityNodeVoteValue * COIN){
                                 if (vSolutions.size() == 2){
                                     std::string voteOpinion(vSolutions[1].begin(), vSolutions[1].end());
+                                    LogPrintf("CInfinitynodeMan::updateInfinityNodeInfo -- Extract vote at height: %d.\n", prevBlockIndex->nHeight);
                                     if(voteOpinion.length() == 9){
                                         std::string proposalID = voteOpinion.substr(0, 8);
                                         bool opinion = false;
@@ -342,14 +356,21 @@ bool CInfinitynodeMan::buildInfinitynodeList(int nBlockHeight, int nLowHeight)
                                             LogPrintf("CInfinitynodeMan::updateInfinityNodeInfo -- PrevBurnFund tx is not in block.\n");
                                             return false;
                                         }
-
                                         CTxDestination addressBurnFund;
                                         if(!ExtractDestination(prevtx->vout[index].scriptPubKey, addressBurnFund)){
                                             LogPrintf("CInfinitynodeMan::updateInfinityNodeInfo -- False when extract payee from BurnFund tx.\n");
                                             return false;
                                         }
-                                        CVote vote = CVote(proposalID, prevtx->vout[index].scriptPubKey, prevBlockIndex->nHeight, opinion);
-                                        infnodersv.Add(vote);
+                                        //we have all infos. Then add in map
+                                        if(prevBlockIndex->nHeight < pindex->nHeight - INF_MATURED_LIMIT) {
+                                            //matured
+	                                        LogPrintf("CInfinitynodeMan::updateInfinityNodeInfo -- Voter: %s, proposal: %s.\n", EncodeDestination(addressBurnFund), voteOpinion);
+                                            CVote vote = CVote(proposalID, prevtx->vout[index].scriptPubKey, prevBlockIndex->nHeight, opinion);
+                                            infnodersv.Add(vote);
+                                        } else {
+                                            //non matured
+                                            LogPrintf("CInfinitynodeMan::updateInfinityNodeInfo -- Non matured vote.\n");
+                                        }
                                     }
                                 }
                             }
@@ -435,7 +456,10 @@ bool CInfinitynodeMan::buildInfinitynodeList(int nBlockHeight, int nLowHeight)
     CFlatDB<CInfinitynodeMan> flatdb5("infinitynode.dat", "magicInfinityNodeCache");
     flatdb5.Dump(infnodeman);
 
-    LogPrintf("CInfinitynodeMan::buildInfinitynodeList -- list infinity node was built from blockchain and has %d nodes\n", Count());
+    CFlatDB<CInfinitynodersv> flatdb6("infinitynodersv.dat", "magicInfinityRSV");
+    flatdb6.Dump(infnodersv);
+
+    LogPrintf("CInfinitynodeMan::buildInfinitynodeList -- list infinity node was built from blockchain at Height: %s\n", nBlockHeight);
     return true;
 }
 
@@ -494,7 +518,6 @@ void CInfinitynodeMan::updateLastPaid()
 bool CInfinitynodeMan::deterministicRewardStatement(int nSinType)
 {
     int stm_height_temp = Params().GetConsensus().nInfinityNodeGenesisStatement;
-    int stm_size_temp = 0;
     if (nSinType == 10) mapStatementBIG.clear();
     if (nSinType == 5) mapStatementMID.clear();
     if (nSinType == 1) mapStatementLIL.clear();
@@ -511,11 +534,12 @@ bool CInfinitynodeMan::deterministicRewardStatement(int nSinType)
                 ++totalSinType;
             }
         }
-        /*TODO: fix if totalSinType > limit node*/
-        //update variable for each SinType
+
+        //if no node of this type, then break condition
+        if (totalSinType == 0){stm_height_temp = nCachedBlockHeight;}
+
         if (nSinType == 10)
         {
-            if(Params().GetConsensus().nLimitSINNODE_10 < totalSinType){totalSinType=Params().GetConsensus().nLimitSINNODE_10;}
             mapStatementBIG[stm_height_temp] = totalSinType;
             nBIGLastStmHeight = stm_height_temp;
             nBIGLastStmSize = totalSinType;
@@ -523,7 +547,6 @@ bool CInfinitynodeMan::deterministicRewardStatement(int nSinType)
 
         if (nSinType == 5)
         {
-            if(Params().GetConsensus().nLimitSINNODE_5 < totalSinType){totalSinType=Params().GetConsensus().nLimitSINNODE_5;}
             mapStatementMID[stm_height_temp] = totalSinType;
             nMIDLastStmHeight = stm_height_temp;
             nMIDLastStmSize = totalSinType;
@@ -531,7 +554,6 @@ bool CInfinitynodeMan::deterministicRewardStatement(int nSinType)
 
         if (nSinType == 1)
         {
-            if(Params().GetConsensus().nLimitSINNODE_1 < totalSinType){totalSinType=Params().GetConsensus().nLimitSINNODE_1;}
             mapStatementLIL[stm_height_temp] = totalSinType;
             nLILLastStmHeight = stm_height_temp;
             nLILLastStmSize = totalSinType;
@@ -539,7 +561,6 @@ bool CInfinitynodeMan::deterministicRewardStatement(int nSinType)
 
         //loop
         stm_height_temp = stm_height_temp + totalSinType;
-        stm_size_temp = totalSinType;
     }
     return true;
 }

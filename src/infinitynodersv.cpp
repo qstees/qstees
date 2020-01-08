@@ -5,6 +5,7 @@
 #include <infinitynodersv.h>
 #include <infinitynodeman.h>
 #include <util.h> //fMasterNode variable
+#include <flat-database.h>
 
 CInfinitynodersv infnodersv;
 
@@ -43,7 +44,6 @@ bool CInfinitynodersv::Add(CVote &vote)
         LogPrintf("CInfinitynodersv::1st vote from %s\n", vote.getVoter().ToString());
         mapProposalVotes[vote.getProposalId()].push_back(vote);
     } else {
-        LogPrintf("CInfinitynodersv::2nd vote from %s\n", vote.getVoter().ToString());
         int i=0;
         for (auto& v : it->second){
             //added
@@ -52,6 +52,7 @@ bool CInfinitynodersv::Add(CVote &vote)
                     LogPrintf("CInfinitynodersv::same voter from with low height %s\n", v.getVoter().ToString());
                     return false;
                 }else{
+                    LogPrintf("CInfinitynodersv::new vote from higher height %s\n", vote.getVoter().ToString());
                     mapProposalVotes[vote.getProposalId()].erase (mapProposalVotes[vote.getProposalId()].begin()+i);
                     mapProposalVotes[vote.getProposalId()].push_back(vote);
                     return true;
@@ -60,6 +61,7 @@ bool CInfinitynodersv::Add(CVote &vote)
             i++;
         }
         //not found the same voter ==> add
+        LogPrintf("CInfinitynodersv::new vote from %s for proposal %s\n", vote.getVoter().ToString(), vote.getProposalId());
         mapProposalVotes[vote.getProposalId()].push_back(vote);
     }
     return true;
@@ -106,6 +108,7 @@ int CInfinitynodersv::getResult(std::string proposal, bool opinion, int mode)
 bool CInfinitynodersv::rsvScan(int nBlockHeight)
 {
     Clear();
+    LogPrintf("CInfinitynodersv::rsvScan -- Cleared map. Size is %d\n", (int)mapProposalVotes.size());
     if (nBlockHeight <= INFINITYNODE_RSV_BEGIN) return false;
     uint256 blockHash;
     if(!GetBlockHash(blockHash, nBlockHeight)) {
@@ -116,7 +119,7 @@ bool CInfinitynodersv::rsvScan(int nBlockHeight)
     CBlockIndex* pindex;
     pindex = LookupBlockIndex(blockHash);
     CBlockIndex* prevBlockIndex = pindex;
-    int nLastPaidScanDeepth = max(Params().GetConsensus().nLimitSINNODE_1, max(Params().GetConsensus().nLimitSINNODE_5, Params().GetConsensus().nLimitSINNODE_10));
+
     while (prevBlockIndex->nHeight >= INFINITYNODE_RSV_BEGIN)
     {
         CBlock blockReadFromDisk;
@@ -132,10 +135,10 @@ bool CInfinitynodersv::rsvScan(int nBlockHeight)
                         const CScript& prevScript = out.scriptPubKey;
                         Solver(prevScript, whichType, vSolutions);
                         //Send to BurnAddress
-                        if (whichType == TX_BURN_DATA && Params().GetConsensus().cBurnAddress == EncodeDestination(CKeyID(uint160(vSolutions[0]))))
+                        if (whichType == TX_BURN_DATA && Params().GetConsensus().cGovernanceAddress == EncodeDestination(CKeyID(uint160(vSolutions[0]))))
                         {
                             //Amount for vote
-                            if (out.nValue * 10 == Params().GetConsensus().nInfinityNodeVoteValue * COIN){
+                            if (out.nValue == Params().GetConsensus().nInfinityNodeVoteValue * COIN){
                                 if (vSolutions.size() == 2){
                                     std::string voteOpinion(vSolutions[1].begin(), vSolutions[1].end());
                                     if(voteOpinion.length() == 9){
@@ -158,8 +161,16 @@ bool CInfinitynodersv::rsvScan(int nBlockHeight)
                                             LogPrintf("CInfinitynodersv::rsvScan -- False when extract payee from BurnFund tx.\n");
                                             return false;
                                         }
-                                        CVote vote = CVote(proposalID, prevtx->vout[index].scriptPubKey, prevBlockIndex->nHeight, opinion);
-                                        Add(vote);
+                                        //we have all infos. Then add in map
+                                        if(prevBlockIndex->nHeight < pindex->nHeight - Params().MaxReorganizationDepth()) {
+                                            LogPrintf("CInfinitynodeMan::rsvScan -- Voter: %s, Heigh: %d, proposal: %s.\n", 
+                                                     EncodeDestination(addressBurnFund), prevBlockIndex->nHeight, voteOpinion);
+                                            CVote vote = CVote(proposalID, prevtx->vout[index].scriptPubKey, prevBlockIndex->nHeight, opinion);
+                                            Add(vote);
+                                        } else {
+                                            //non matured
+                                            LogPrintf("CInfinitynodeMan::rsvScan -- Non matured vote.\n");
+                                        }
                                     }
                                 }
                             }
@@ -174,14 +185,21 @@ bool CInfinitynodersv::rsvScan(int nBlockHeight)
         // continue with previous block
         prevBlockIndex = prevBlockIndex->pprev;
     }
+
+    CFlatDB<CInfinitynodersv> flatdb6("infinitynodersv.dat", "magicInfinityRSV");
+    flatdb6.Dump(infnodersv);
+
     return true;
 }
 
 std::string CInfinitynodersv::ToString() const
 {
     std::ostringstream info;
-
-    info << "InfinityNode: " << (int)mapProposalVotes.size();
+    LOCK(cs);
+    info << "Proposal: " << (int)mapProposalVotes.size();
+    for (auto& infpair : mapProposalVotes) {
+        info << " Id: " << infpair.first << " Votes: " << infpair.second.size();
+    }
 
     return info.str();
 }

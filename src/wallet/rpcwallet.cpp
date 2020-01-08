@@ -44,26 +44,7 @@
 
 #include <functional>
 
-int32_t komodo_dpowconfs(int32_t height,int32_t numconfs);
 static const std::string WALLET_ENDPOINT_BASE = "/wallet/";
-
-int tx_height( const uint256 &hash ){
-    int nHeight = 0;
-    CTransactionRef tx;
-    uint256 hashBlock;
-    if (!GetTransaction(hash, tx, Params().GetConsensus(), hashBlock, true)) {
-        fprintf(stderr,"tx hash %s does not exist!\n", hash.ToString().c_str() );
-    }
-
-    BlockMap::const_iterator it = mapBlockIndex.find(hashBlock);
-    if (it != mapBlockIndex.end()) {
-        nHeight = it->second->nHeight;
-        //fprintf(stderr,"blockHash %s height %d\n",hashBlock.ToString().c_str(), nHeight);
-    } else {
-        fprintf(stderr,"block hash %s does not exist!\n", hashBlock.ToString().c_str() );
-    }
-    return nHeight;
-}
 
 bool GetWalletNameFromJSONRPCRequest(const JSONRPCRequest& request, std::string& wallet_name)
 {
@@ -116,7 +97,8 @@ void EnsureWalletIsUnlocked(CWallet * const pwallet)
 
 static void WalletTxToJSON(const CWalletTx& wtx, UniValue& entry)
 {
-    int confirms = wtx.GetDepthInMainChain();
+    int confirms = wtx.GetDepthInMainChain(false);
+    entry.pushKV("confirmations", confirms);
     bool fLocked = instantsend.IsLockedInstantSendTransaction(wtx.GetHash());
     entry.push_back(Pair("instantlock", fLocked));
     if (wtx.IsCoinBase())
@@ -126,11 +108,7 @@ static void WalletTxToJSON(const CWalletTx& wtx, UniValue& entry)
         entry.pushKV("blockhash", wtx.hashBlock.GetHex());
         entry.pushKV("blockindex", wtx.nIndex);
         entry.pushKV("blocktime", LookupBlockIndex(wtx.hashBlock)->GetBlockTime());
-        entry.pushKV("confirmations", komodo_dpowconfs((int32_t)mapBlockIndex[wtx.hashBlock]->nHeight,confirms));
-        entry.pushKV("rawconfirmations", confirms);
     } else {
-        entry.pushKV("confirmations", 0);
-        entry.pushKV("rawconfirmations", 0);
         entry.pushKV("trusted", wtx.IsTrusted());
     }
     uint256 hash = wtx.GetHash();
@@ -492,10 +470,6 @@ static UniValue getaddressesbyaccount(const JSONRPCRequest& request)
     return ret;
 }
 
-static CTransactionRef PaymentInvoice(CWallet * const pwallet, const CTxDestination &address, CAmount nValue, std::string InvoiceInfo)
-{
-}
-
 static CTransactionRef SendMoney(CWallet * const pwallet, const CTxDestination &address, CAmount nValue, bool fSubtractFeeFromAmount, const CCoinControl& coin_control, mapValue_t mapValue, std::string fromAccount, int termDepositLength, bool fUseInstantSend=false)
 {
     CAmount curBalance = pwallet->GetBalance();
@@ -598,123 +572,7 @@ static UniValue decryptAES(const JSONRPCRequest& request)
 
 }
 
-static UniValue exportaddressnewpass(const JSONRPCRequest& request)
-{
-    std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
-    CWallet* const pwallet = wallet.get();
 
-    if (!EnsureWalletIsAvailable(pwallet, request.fHelp)) {
-        return NullUniValue;
-    }
-
-    if (request.fHelp || request.params.size() != 2)
-        throw std::runtime_error(
-            "exportaddressnewpass SINAddress passphrase "
-            "\nExport an address.\n"
-            "\nArguments:\n"
-            "1. \"SINAddress\"  (string, required) The SIN address will be used in mobile.\n"
-            "2. \"passphrase\"  (numeric or string, required) The passphrase in mobile to send funds. eg 0.1\n"
-            "\nResult:\n"
-            "\"Encrypted String\"  (string) Encrypted privkey which will be imported in mobile\n"
-            "\nExamples:\n"
-            + HelpExampleCli("exportaddressnewpass", "SINAddress passphrase")
-        );
-
-    LOCK2(cs_main, pwallet->cs_wallet);
-
-    EnsureWalletIsUnlocked(pwallet);
-
-    std::string strAddress = request.params[0].get_str();
-    CTxDestination dest = DecodeDestination(strAddress);
-    if (!IsValidDestination(dest)) {
-        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid SIN address");
-    }
-    auto keyid = GetKeyForDestination(*pwallet, dest);
-    if (keyid.IsNull()) {
-        throw JSONRPCError(RPC_TYPE_ERROR, "Address does not refer to a key");
-    }
-    CKey vchSecret;
-    if (!pwallet->GetKey(keyid, vchSecret)) {
-        throw JSONRPCError(RPC_WALLET_ERROR, "Private key for address " + strAddress + " is not known");
-    }
-
-    std::string keyString = EncodeSecret(vchSecret);
-    std::vector<unsigned char> vchKey(keyString.begin(), keyString.end());
-
-    std::string keyPassPhraseString = request.params[1].get_str();
-
-    CMasterKey kMasterKey;
-    kMasterKey.vchSalt.resize(WALLET_CRYPTO_SALT_SIZE);
-    GetStrongRandBytes(&kMasterKey.vchSalt[0], WALLET_CRYPTO_SALT_SIZE);
-
-    CCrypter crypter;
-    int64_t nStartTime = GetTimeMillis();
-    crypter.SetKeyFromPassphrase(SecureString(keyPassPhraseString.begin(), keyPassPhraseString.end()), kMasterKey.vchSalt, 25000, kMasterKey.nDerivationMethod);
-    kMasterKey.nDeriveIterations = static_cast<unsigned int>(2500000 / ((double)(GetTimeMillis() - nStartTime)));
-
-    nStartTime = GetTimeMillis();
-    crypter.SetKeyFromPassphrase(SecureString(keyPassPhraseString.begin(), keyPassPhraseString.end()), kMasterKey.vchSalt, kMasterKey.nDeriveIterations, kMasterKey.nDerivationMethod);
-    kMasterKey.nDeriveIterations = (kMasterKey.nDeriveIterations + static_cast<unsigned int>(kMasterKey.nDeriveIterations * 100 / ((double)(GetTimeMillis() - nStartTime)))) / 2;
-
-    if (kMasterKey.nDeriveIterations < 25000)
-        kMasterKey.nDeriveIterations = 25000;
-
-    if (!crypter.SetKeyFromPassphrase(SecureString(keyPassPhraseString.begin(), keyPassPhraseString.end()), kMasterKey.vchSalt, kMasterKey.nDeriveIterations, kMasterKey.nDerivationMethod)) {
-        LogPrintf ("CWallet::exportmobileaddress -- can't create crypter\n");
-        return false;
-    }
-
-    if (!crypter.Encrypt(CKeyingMaterial(vchKey.begin(), vchKey.end()), kMasterKey.vchCryptedKey))
-        return false;
-
-    std::string encryptedString = HexStr(kMasterKey.vchCryptedKey.begin(), kMasterKey.vchCryptedKey.end());
-
-    //Descrypt
-    CCrypter decrypt;
-    decrypt.SetKeyFromPassphrase(SecureString(keyPassPhraseString.begin(), keyPassPhraseString.end()), kMasterKey.vchSalt, kMasterKey.nDeriveIterations, kMasterKey.nDerivationMethod);
-    CKeyingMaterial vchDecrypted;
-    decrypt.Decrypt(ParseHex(encryptedString), vchDecrypted);
-    std::vector<unsigned char> vchPlaintext(vchDecrypted.begin(), vchDecrypted.end());
-    std::string tmp2(vchPlaintext.begin(), vchPlaintext.end());
-
-    UniValue results(UniValue::VARR);
-    UniValue entry(UniValue::VOBJ);
-
-    //entry.push_back(Pair("PrivkeyHex", HexStr(vchSecret.begin(), vchSecret.end())));
-    //entry.push_back(Pair("Privkeyvch", std::string(vchKey.begin(), vchKey.end())));
-    //entry.push_back(Pair("PrivkeyString", keyString));
-    entry.push_back(Pair("address", EncodeDestination(dest)));
-    entry.push_back(Pair("cipherTxt", encryptedString));
-    entry.push_back(Pair("vSalt", HexStr(kMasterKey.vchSalt)));
-    entry.push_back(Pair("rounds", (int)kMasterKey.nDeriveIterations));
-    //entry.push_back(Pair("Passphrase", keyPassPhraseString));
-    //entry.push_back(Pair("nDerivationMethod", (int)kMasterKey.nDerivationMethod));
-    //entry.push_back(Pair("Decrypted", tmp2));
-
-
-    //KeyFile
-    std::ostringstream streamInfo;
-    streamInfo << "SINKeyFile_" << EncodeDestination(dest) << ".json";
-    boost::filesystem::path filepath = streamInfo.str();
-
-    filepath = boost::filesystem::absolute(filepath);
-    if (boost::filesystem::exists(filepath)) {
-        throw JSONRPCError(RPC_INVALID_PARAMETER, filepath.string() + " already exists. If you are sure this is what you want?");
-    }
-
-    std::ofstream file;
-    file.open(filepath.string().c_str());
-    if (!file.is_open())
-        throw JSONRPCError(RPC_INVALID_PARAMETER, "Cannot open wallet dump file");
-
-    file << strprintf("{\"address\": \"%s\", \"cipherTxt\": \"%s\", \"vSalt\": \"%s\", \"rounds\": %d}\n", EncodeDestination(dest), encryptedString, HexStr(kMasterKey.vchSalt), (int)kMasterKey.nDeriveIterations);
-    file.close();
-
-    entry.push_back(Pair("filename", filepath.string()));
-
-    results.push_back(entry);
-    return results;
-}
 /**
  * @xtdevcoin
  * this function notify that user has a data message
@@ -2062,11 +1920,9 @@ struct tallyitem
     int nConf;
     std::vector<uint256> txids;
     bool fIsWatchonly;
-    int nHeight;
     tallyitem()
     {
         nAmount = 0;
-        nHeight = 0;
         nConf = std::numeric_limits<int>::max();
         fIsWatchonly = false;
     }
@@ -2107,9 +1963,7 @@ static UniValue ListReceived(CWallet * const pwallet, const UniValue& params, bo
         if (wtx.IsCoinBase() || !CheckFinalTx(*wtx.tx))
             continue;
 
-        // Filter by dpowconfs, so returned data is all notarized
-        int nHeight = tx_height(pairWtx.first);
-        int nDepth = komodo_dpowconfs(nHeight, wtx.GetDepthInMainChain());
+        int nDepth = wtx.GetDepthInMainChain();
         if (nDepth < nMinDepth)
             continue;
 
@@ -2163,20 +2017,17 @@ static UniValue ListReceived(CWallet * const pwallet, const UniValue& params, bo
         CAmount nAmount = 0;
         int nConf = std::numeric_limits<int>::max();
         bool fIsWatchonly = false;
-        int nHeight = 0;
         if (it != mapTally.end())
         {
             nAmount = (*it).second.nAmount;
             nConf = (*it).second.nConf;
             fIsWatchonly = (*it).second.fIsWatchonly;
-            nHeight = (*it).second.nHeight;
         }
 
         if (by_label)
         {
             tallyitem& _item = label_tally[label];
             _item.nAmount += nAmount;
-            _item.nHeight = std::min(_item.nHeight, nHeight);
             _item.nConf = std::min(_item.nConf, nConf);
             _item.fIsWatchonly = fIsWatchonly;
         }
@@ -2188,8 +2039,7 @@ static UniValue ListReceived(CWallet * const pwallet, const UniValue& params, bo
             obj.pushKV("address",       EncodeDestination(address));
             obj.pushKV("account",       label);
             obj.pushKV("amount",        ValueFromAmount(nAmount));
-            obj.pushKV("rawconfirmations", (nConf == std::numeric_limits<int>::max() ? 0 : nConf));
-            obj.pushKV("confirmations", komodo_dpowconfs( nHeight, (nConf == std::numeric_limits<int>::max() ? 0 : nConf)));
+            obj.pushKV("confirmations", (nConf == std::numeric_limits<int>::max() ? 0 : nConf));
             obj.pushKV("label", label);
             UniValue transactions(UniValue::VARR);
             if (it != mapTally.end())
@@ -2209,15 +2059,13 @@ static UniValue ListReceived(CWallet * const pwallet, const UniValue& params, bo
         for (const auto& entry : label_tally)
         {
             CAmount nAmount = entry.second.nAmount;
-            int nConf   = entry.second.nConf;
-            int nHeight = entry.second.nHeight;
+            int nConf = entry.second.nConf;
             UniValue obj(UniValue::VOBJ);
             if (entry.second.fIsWatchonly)
                 obj.pushKV("involvesWatchonly", true);
             obj.pushKV("account",       entry.first);
             obj.pushKV("amount",        ValueFromAmount(nAmount));
-            obj.pushKV("confirmations", komodo_dpowconfs( nHeight, (nConf == std::numeric_limits<int>::max() ? 0 : nConf)));
-            obj.pushKV("rawconfirmations", (nConf == std::numeric_limits<int>::max() ? 0 : nConf));
+            obj.pushKV("confirmations", (nConf == std::numeric_limits<int>::max() ? 0 : nConf));
             obj.pushKV("label",         entry.first);
             ret.push_back(obj);
         }
@@ -2389,15 +2237,8 @@ static void ListTransactions(CWallet* const pwallet, const CWalletTx& wtx, const
         }
     }
 
-    int nConfs = wtx.GetDepthInMainChain();
-    // Filter by dpowconfs, so returned data is all notarized
-    if (nMinDepth > 1) {
-        int nHeight = tx_height(wtx.GetHash());
-        nConfs = komodo_dpowconfs(nHeight, nConfs);
-    }
-
     // Received
-    if (listReceived.size() > 0 && nConfs >= nMinDepth)
+    if (listReceived.size() > 0 && wtx.GetDepthInMainChain() >= nMinDepth)
     {
         for (const COutputEntry& r : listReceived)
         {
@@ -4080,8 +3921,7 @@ static UniValue listunspent(const JSONRPCRequest& request)
 
         entry.pushKV("scriptPubKey", HexStr(scriptPubKey.begin(), scriptPubKey.end()));
         entry.pushKV("amount", ValueFromAmount(out.tx->tx->vout[out.i].nValue));
-        entry.pushKV("confirmations", komodo_dpowconfs((int32_t)mapBlockIndex[out.tx->hashBlock]->nHeight,out.nDepth));
-        entry.pushKV("rawconfirmations", out.nDepth);
+        entry.pushKV("confirmations", out.nDepth);
         entry.pushKV("spendable", out.fSpendable);
         entry.pushKV("solvable", out.fSolvable);
         entry.pushKV("safe", out.fSafe);
@@ -5386,6 +5226,128 @@ UniValue walletcreatefundedpsbt(const JSONRPCRequest& request)
     result.pushKV("fee", ValueFromAmount(fee));
     result.pushKV("changepos", change_position);
     return result;
+}
+
+static UniValue exportaddressnewpass(const JSONRPCRequest& request)
+{
+    std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
+    CWallet* const pwallet = wallet.get();
+
+    if (!EnsureWalletIsAvailable(pwallet, request.fHelp)) {
+        return NullUniValue;
+    }
+
+    if (request.fHelp || request.params.size() != 2)
+        throw std::runtime_error(
+            "exportaddressnewpass SINAddress passphrase "
+            "\nExport an address.\n"
+            "\nArguments:\n"
+            "1. \"SINAddress\"  (string, required) The SIN address will be used in mobile.\n"
+            "2. \"passphrase\"  (numeric or string, required) The passphrase in mobile to send funds. eg 0.1\n"
+            "\nResult:\n"
+            "\"Encrypted String\"  (string) Encrypted privkey which will be imported in mobile\n"
+            "\nExamples:\n"
+            + HelpExampleCli("exportaddressnewpass", "SINAddress passphrase")
+        );
+
+    LOCK2(cs_main, pwallet->cs_wallet);
+
+    EnsureWalletIsUnlocked(pwallet);
+
+    std::string strAddress = request.params[0].get_str();
+    CTxDestination dest = DecodeDestination(strAddress);
+    if (!IsValidDestination(dest)) {
+        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid SIN address");
+    }
+    auto keyid = GetKeyForDestination(*pwallet, dest);
+    if (keyid.IsNull()) {
+        throw JSONRPCError(RPC_TYPE_ERROR, "Address does not refer to a key");
+    }
+    CKey vchSecret;
+    if (!pwallet->GetKey(keyid, vchSecret)) {
+        throw JSONRPCError(RPC_WALLET_ERROR, "Private key for address " + strAddress + " is not known");
+    }
+
+    CPubKey pubkey = vchSecret.GetPubKey();
+    assert(vchSecret.VerifyPubKey(pubkey));
+
+    std::string keyString = EncodeSecret(vchSecret);
+    std::vector<unsigned char> vchKey(keyString.begin(), keyString.end());
+
+    std::string keyPassPhraseString = request.params[1].get_str();
+
+    CMasterKey kMasterKey;
+    kMasterKey.vchSalt.resize(WALLET_CRYPTO_SALT_SIZE);
+    GetStrongRandBytes(&kMasterKey.vchSalt[0], WALLET_CRYPTO_SALT_SIZE);
+
+    CCrypter crypter;
+    int64_t nStartTime = GetTimeMillis();
+    crypter.SetKeyFromPassphrase(SecureString(keyPassPhraseString.begin(), keyPassPhraseString.end()), kMasterKey.vchSalt, 25000, kMasterKey.nDerivationMethod);
+    kMasterKey.nDeriveIterations = static_cast<unsigned int>(2500000 / ((double)(GetTimeMillis() - nStartTime)));
+
+    nStartTime = GetTimeMillis();
+    crypter.SetKeyFromPassphrase(SecureString(keyPassPhraseString.begin(), keyPassPhraseString.end()), kMasterKey.vchSalt, kMasterKey.nDeriveIterations, kMasterKey.nDerivationMethod);
+    kMasterKey.nDeriveIterations = (kMasterKey.nDeriveIterations + static_cast<unsigned int>(kMasterKey.nDeriveIterations * 100 / ((double)(GetTimeMillis() - nStartTime)))) / 2;
+
+    if (kMasterKey.nDeriveIterations < 25000)
+        kMasterKey.nDeriveIterations = 25000;
+
+    if (!crypter.SetKeyFromPassphrase(SecureString(keyPassPhraseString.begin(), keyPassPhraseString.end()), kMasterKey.vchSalt, kMasterKey.nDeriveIterations, kMasterKey.nDerivationMethod)) {
+        LogPrintf ("CWallet::exportmobileaddress -- can't create crypter\n");
+        return false;
+    }
+
+    if (!crypter.Encrypt(CKeyingMaterial(vchKey.begin(), vchKey.end()), kMasterKey.vchCryptedKey))
+        return false;
+
+    std::string encryptedString = HexStr(kMasterKey.vchCryptedKey.begin(), kMasterKey.vchCryptedKey.end());
+
+    //Descrypt
+    CCrypter decrypt;
+    decrypt.SetKeyFromPassphrase(SecureString(keyPassPhraseString.begin(), keyPassPhraseString.end()), kMasterKey.vchSalt, kMasterKey.nDeriveIterations, kMasterKey.nDerivationMethod);
+    CKeyingMaterial vchDecrypted;
+    decrypt.Decrypt(ParseHex(encryptedString), vchDecrypted);
+    std::vector<unsigned char> vchPlaintext(vchDecrypted.begin(), vchDecrypted.end());
+    std::string tmp2(vchPlaintext.begin(), vchPlaintext.end());
+
+    UniValue results(UniValue::VARR);
+    UniValue entry(UniValue::VOBJ);
+
+    //entry.push_back(Pair("PrivkeyHex", HexStr(vchSecret.begin(), vchSecret.end())));
+    //entry.push_back(Pair("Privkeyvch", std::string(vchKey.begin(), vchKey.end())));
+    //entry.push_back(Pair("PrivkeyString", keyString));
+    entry.push_back(Pair("address", EncodeDestination(dest)));
+    entry.push_back(Pair("publicKey",HexStr(pubkey)));
+    entry.push_back(Pair("cipherTxt", encryptedString));
+    entry.push_back(Pair("vSalt", HexStr(kMasterKey.vchSalt)));
+    entry.push_back(Pair("rounds", (int)kMasterKey.nDeriveIterations));
+    //entry.push_back(Pair("Passphrase", keyPassPhraseString));
+    //entry.push_back(Pair("nDerivationMethod", (int)kMasterKey.nDerivationMethod));
+    //entry.push_back(Pair("Decrypted", tmp2));
+
+
+    //KeyFile
+    std::ostringstream streamInfo;
+    streamInfo << "SINKeyFile_" << EncodeDestination(dest) << ".json";
+    boost::filesystem::path filepath = streamInfo.str();
+
+    filepath = boost::filesystem::absolute(filepath);
+    if (boost::filesystem::exists(filepath)) {
+        throw JSONRPCError(RPC_INVALID_PARAMETER, filepath.string() + " already exists. If you are sure this is what you want?");
+    }
+
+    std::ofstream file;
+    file.open(filepath.string().c_str());
+    if (!file.is_open())
+        throw JSONRPCError(RPC_INVALID_PARAMETER, "Cannot open wallet dump file");
+
+    file << strprintf("{\"address\": \"%s\", \"publicKey\": \"%s\", \"cipherTxt\": \"%s\", \"vSalt\": \"%s\", \"rounds\": %d}\n", EncodeDestination(dest), HexStr(pubkey), encryptedString, HexStr(kMasterKey.vchSalt), (int)kMasterKey.nDeriveIterations);
+    file.close();
+
+    entry.push_back(Pair("filename", filepath.string()));
+
+    results.push_back(entry);
+    return results;
 }
 
 extern UniValue abortrescan(const JSONRPCRequest& request); // in rpcdump.cpp

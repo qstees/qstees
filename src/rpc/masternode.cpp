@@ -799,11 +799,6 @@ UniValue sentinelping(const JSONRPCRequest& request)
 
 UniValue infinitynode(const JSONRPCRequest& request)
 {
-#ifdef ENABLE_WALLET
-    std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
-    CWallet* const pwallet = wallet.get();
-#endif // ENABLE_WALLET
-
     std::string strCommand;
     std::string strFilter = "";
     std::string strOption = "";
@@ -823,7 +818,7 @@ UniValue infinitynode(const JSONRPCRequest& request)
         (strCommand != "build-list" && strCommand != "show-lastscan" && strCommand != "show-infos" && strCommand != "stats"
                                     && strCommand != "show-lastpaid" && strCommand != "build-stm" && strCommand != "show-stm"
                                     && strCommand != "show-candidate" && strCommand != "show-script" && strCommand != "show-proposal"
-                                    && strCommand != "scan-vote"
+                                    && strCommand != "scan-vote" && strCommand != "show-proposals"
         ))
             throw std::runtime_error(
                 "infinitynode \"command\"...\n"
@@ -954,10 +949,14 @@ UniValue infinitynode(const JSONRPCRequest& request)
 
     if (strCommand == "show-proposal")
     {
+        if (request.params.size() < 2)
+            throw JSONRPCError(RPC_INVALID_PARAMETER, "Correct usage is 'infinitynode show-proposal \"ProposalId\" \"(Optional)Mode\" '");
+
         std::string proposalId  = strFilter;
-        std::vector<CVote>* v = infnodersv.Find(proposalId);
-        if(v != NULL){
-            obj.push_back(Pair("Votes", (int)v->size()));
+        std::vector<CVote>* vVote = infnodersv.Find(proposalId);
+        obj.push_back(Pair("ProposalId", proposalId));
+        if(vVote != NULL){
+            obj.push_back(Pair("Votes", (int)vVote->size()));
         }else{
             obj.push_back(Pair("Votes", "0"));
         }
@@ -967,6 +966,22 @@ UniValue infinitynode(const JSONRPCRequest& request)
         if (strOption == "all"){mode=2;}
         obj.push_back(Pair("Yes", infnodersv.getResult(proposalId, true, mode)));
         obj.push_back(Pair("No", infnodersv.getResult(proposalId, false, mode)));
+        for (auto& v : *vVote){
+            CTxDestination addressVoter;
+            ExtractDestination(v.getVoter(), addressVoter);
+            obj.push_back(Pair(EncodeDestination(addressVoter), v.getOpinion()));
+        }
+        return obj;
+    }
+
+    if (strCommand == "show-proposals")
+    {
+        std::map<std::string, std::vector<CVote>> mapCopy = infnodersv.GetFullProposalVotesMap();
+        obj.push_back(Pair("Proposal", mapCopy.size()));
+        for (auto& infpair : mapCopy) {
+            obj.push_back(Pair(infpair.first, infpair.second.size()));
+        }
+
         return obj;
     }
 
@@ -980,8 +995,10 @@ UniValue infinitynode(const JSONRPCRequest& request)
 
         bool result = infnodersv.rsvScan(pindex->nHeight);
         obj.push_back(Pair("Result", result));
+        obj.push_back(Pair("Details", infnodersv.ToString()));
         return obj;
     }
+    return NullUniValue;
 }
 
 /**
@@ -1010,13 +1027,6 @@ static UniValue infinitynodeburnfund(const JSONRPCRequest& request)
     if(!masternodeSync.IsMasternodeListSynced())
     {
         throw JSONRPCError(RPC_TYPE_ERROR, "Please wait until InfinityNode data is synced!");
-    }
-
-    if (mnodeman.CountSinType(1) >= Params().GetConsensus().nLimitSINNODE_1 &&
-        mnodeman.CountSinType(5) >= Params().GetConsensus().nLimitSINNODE_5 &&
-        mnodeman.CountSinType(10) >= Params().GetConsensus().nLimitSINNODE_10)
-    {
-        throw JSONRPCError(RPC_TYPE_ERROR, "Number of INFINITYNODE is FULL");
     }
 
     LOCK2(cs_main, pwallet->cs_wallet);
@@ -1054,22 +1064,7 @@ static UniValue infinitynodeburnfund(const JSONRPCRequest& request)
         else if (sintype == 1) ++totalLIL;
         else ++totalUnknown;
     }
-    //Limit node
-    if ((nAmount == Params().GetConsensus().nMasternodeBurnSINNODE_1 * COIN && mnodeman.CountSinType(1) >= Params().GetConsensus().nLimitSINNODE_1) ||
-        (nAmount == Params().GetConsensus().nMasternodeBurnSINNODE_5 * COIN && mnodeman.CountSinType(5) >= Params().GetConsensus().nLimitSINNODE_5) ||
-        (nAmount == Params().GetConsensus().nMasternodeBurnSINNODE_10 * COIN && mnodeman.CountSinType(10) >= Params().GetConsensus().nLimitSINNODE_10) )
-    {
-        strError = strprintf("Error: Number of SINNODE for type %d is FULL", nAmount/COIN);
-        throw JSONRPCError(RPC_TYPE_ERROR, strError);
-    }
 
-    if ((nAmount == Params().GetConsensus().nMasternodeBurnSINNODE_1 * COIN && totalLIL >= Params().GetConsensus().nLimitSINNODE_1) ||
-        (nAmount == Params().GetConsensus().nMasternodeBurnSINNODE_5 * COIN && totalMID >= Params().GetConsensus().nLimitSINNODE_5) ||
-        (nAmount == Params().GetConsensus().nMasternodeBurnSINNODE_10 * COIN && totalBIG >= Params().GetConsensus().nLimitSINNODE_10) )
-    {
-        strError = strprintf("Error: Number of INFINITYNODE for type %d is FULL", nAmount/COIN);
-        throw JSONRPCError(RPC_TYPE_ERROR, strError);
-    }
     // BurnAddress
     CTxDestination dest = DecodeDestination(Params().GetConsensus().cBurnAddress);
     CScript scriptPubKeyBurnAddress = GetScriptForDestination(dest);
@@ -1116,7 +1111,6 @@ static UniValue infinitynodeburnfund(const JSONRPCRequest& request)
 
         entry.pushKV("scriptPubKey", HexStr(scriptPubKey.begin(), scriptPubKey.end()));
         entry.pushKV("amount", ValueFromAmount(out.tx->tx->vout[out.i].nValue));
-        entry.pushKV("rawconfirmations", out.nDepth);
         entry.pushKV("spendable", out.fSpendable);
         entry.pushKV("solvable", out.fSolvable);
         entry.pushKV("safe", out.fSafe);
@@ -1309,6 +1303,7 @@ static UniValue infinitynodevote(const JSONRPCRequest& request)
             + HelpExampleCli("infinitynodevote", "AddressVote ProposalId [yes/no]")
         );
     UniValue results(UniValue::VOBJ);
+    std::string strError = "";
 
     std::string strOwnerAddress = request.params[0].get_str();
     CTxDestination INFAddress = DecodeDestination(strOwnerAddress);
@@ -1320,7 +1315,8 @@ static UniValue infinitynodevote(const JSONRPCRequest& request)
     bool has_only_digits = (ProposalId.find_first_not_of( "0123456789" ) == string::npos);
     //if (!has_only_digits || ProposalId.size() != 8){
     if (!has_only_digits || ProposalId != "10000000"){//it will be update at hardfork
-        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "ProposalID must be in format xxxxxxxx (8 digits) number.");
+        strError = strprintf("ProposalID %s must be in format xxxxxxxx (8 digits) number.", ProposalId);
+        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, strError);
     }
 
     std::string opinion = request.params[2].get_str();
@@ -1337,7 +1333,6 @@ static UniValue infinitynodevote(const JSONRPCRequest& request)
     // the user could have gotten from another RPC command prior to now
     pwallet->BlockUntilSyncedToCurrentChain();
 
-    std::string strError;
     std::vector<COutput> vPossibleCoins;
     pwallet->AvailableCoins(vPossibleCoins, true, NULL, false, ALL_COINS);
 

@@ -24,6 +24,9 @@ static const int MASTERNODE_NEW_START_REQUIRED_SECONDS  = 180 * 60;
 
 static const int MASTERNODE_POSE_BAN_MAX_SCORE          = 5;
 
+//IN Vars
+static const int IN_FULL_SCAN_SECONDS                   = 2 * 60;
+
 //
 // The Masternode Ping Class : Contains a different serialize method for sending pings from masternodes throughout the network
 //
@@ -131,6 +134,7 @@ struct masternode_info_t
 
     int64_t nLastDsq = 0; //the dsq count from the last dsq broadcast of this node
     int64_t nTimeLastChecked = 0;
+    int64_t nTimeLastFullINScan = 0;
     int64_t nTimeLastPaid = 0;
     int64_t nTimeLastPing = 0; //* not in CMN
     bool fInfoValid = false; //* not in CMN
@@ -213,6 +217,7 @@ public:
         READWRITE(sigTime);
         READWRITE(nLastDsq);
         READWRITE(nTimeLastChecked);
+        READWRITE(nTimeLastFullINScan);
         READWRITE(nTimeLastPaid);
         READWRITE(nTimeLastWatchdogVote);
         READWRITE(nActiveState);
@@ -231,7 +236,7 @@ public:
 
     bool UpdateFromNewBroadcast(CMasternodeBroadcast& mnb, CConnman& connman);
     /*this function calcul all informations of infinityNode and update the variable which is init as "NULL" in masternode_info_t*/
-    void updateInfinityNodeInfo();
+    void updateInfinityNodeInfo(bool fAllowFull);
 
     CAmount CheckOutPointValue(const COutPoint& outpoint);
     
@@ -311,13 +316,6 @@ public:
     int GetLastPaidTime() { return nTimeLastPaid; }
     int GetLastPaidBlock() { return nBlockLastPaid; }
     void UpdateLastPaid(const CBlockIndex *pindex, int nMaxBlocksToScanBack);
-
-    // KEEP TRACK OF EACH GOVERNANCE ITEM INCASE THIS NODE GOES OFFLINE, SO WE CAN RECALC THEIR STATUS
-    void AddGovernanceVote(uint256 nGovernanceObjectHash);
-    // RECALCULATE CACHED STATUS FLAGS FOR ALL AFFECTED OBJECTS
-    void FlagGovernanceItemsAsDirty();
-
-    void RemoveGovernanceObject(uint256 nGovernanceObjectHash);
 
     void UpdateWatchdogVoteTime(uint64_t nVoteTime = 0);
 

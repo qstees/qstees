@@ -27,7 +27,6 @@
 #include <warnings.h>
 
 // Dash
-#include <governance-classes.h>
 #include <masternode-payments.h>
 #include <masternode-sync.h>
 //
@@ -477,13 +476,6 @@ static UniValue getblocktemplate(const JSONRPCRequest& request)
         && !masternodeSync.IsWinnersListSynced()
         && !mnpayments.GetBlockPayee(chainActive.Height() + 1, 1,  payee))
             throw JSONRPCError(RPC_CLIENT_IN_INITIAL_DOWNLOAD, "Dash Core is downloading masternode winners...");
-
-    // next bock is a superblock and we need governance info to correctly construct it
-    if (sporkManager.IsSporkActive(SPORK_9_SUPERBLOCKS_ENABLED)
-        && !masternodeSync.IsSynced()
-        && CSuperblock::IsValidBlockHeight(chainActive.Height() + 1))
-            throw JSONRPCError(RPC_CLIENT_IN_INITIAL_DOWNLOAD, "SIN Core is syncing with network...");
-    //
 
     static unsigned int nTransactionsUpdatedLast;
 
