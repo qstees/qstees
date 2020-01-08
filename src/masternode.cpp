@@ -72,6 +72,7 @@ bool CMasternode::UpdateFromNewBroadcast(CMasternodeBroadcast& mnb, CConnman& co
     nPoSeBanScore = 0;
     nPoSeBanHeight = 0;
     nTimeLastChecked = 0;
+    nTimeLastFullINScan = 0;
     int nDos = 0;
     if(mnb.lastPing == CMasternodePing() || (mnb.lastPing != CMasternodePing() && mnb.lastPing.CheckAndUpdate(this, true, nDos, connman))) {
         lastPing = mnb.lastPing;
@@ -93,7 +94,7 @@ bool CMasternode::UpdateFromNewBroadcast(CMasternodeBroadcast& mnb, CConnman& co
     return true;
 }
 
-void CMasternode::updateInfinityNodeInfo()
+void CMasternode::updateInfinityNodeInfo(bool fAllowFull)
 {
     AssertLockHeld(cs_main);
 
@@ -122,31 +123,11 @@ void CMasternode::updateInfinityNodeInfo()
         return;
     }
 
-    CTransactionRef tx;
-    uint256 hashblock;
-    if(!GetTransaction(vinBurnFund.prevout.hash, tx, Params().GetConsensus(), hashblock, false)) {
-        LogPrintf("CMasternode::updateInfinityNodeInfo -- BurnFund tx is not in block\n");
-        return;
-    }
-    const CTxIn& txin = tx->vin[0];
-    int index = txin.prevout.n;
-
-    CTransactionRef prevtx;
-    if(!GetTransaction(txin.prevout.hash, prevtx, Params().GetConsensus(), hashblock, false)) {
-        LogPrintf("CMasternode::updateInfinityNodeInfo -- PrevBurnFund tx is not in block\n");
-        return;
-    }
-
     std::vector<std::vector<unsigned char>> vSolutions;
     txnouttype whichType;
     const CScript& prevScript = coinBurnFund.out.scriptPubKey;
     Solver(prevScript, whichType, vSolutions);
     if (whichType == TX_BURN_DATA){burnTxStandard="burn_and_data";}
-
-    CTxDestination addressBurnFund;
-    if(!ExtractDestination(prevtx->vout[index].scriptPubKey, addressBurnFund)){
-        return;
-    }
 
     nExpireHeight = coinBurnFund.nHeight + 720*365;
     nBurnAmount = coinBurnFund.out.nValue / COIN + 1; //automaticaly round
@@ -154,8 +135,31 @@ void CMasternode::updateInfinityNodeInfo()
     collateralAddress = EncodeDestination(addressCollateral);
     if (nBurnAmount >=100000) {nSinType = nBurnAmount / 100000;}
     else { nSinType = nBurnAmount;}
-    burnfundAddress = EncodeDestination(addressBurnFund);
     nodeBurntoAddress = EncodeDestination(addressBurnNode);
+
+    if (fAllowFull) {
+        CTransactionRef tx;
+        uint256 hashblock;
+        if(!GetTransaction(vinBurnFund.prevout.hash, tx, Params().GetConsensus(), hashblock, false)) {
+            LogPrintf("CMasternode::updateInfinityNodeInfo -- BurnFund tx is not in block\n");
+            return;
+        }
+        const CTxIn& txin = tx->vin[0];
+        int index = txin.prevout.n;
+
+        CTransactionRef prevtx;
+        if(!GetTransaction(txin.prevout.hash, prevtx, Params().GetConsensus(), hashblock, false)) {
+            LogPrintf("CMasternode::updateInfinityNodeInfo -- PrevBurnFund tx is not in block\n");
+            return;
+        }
+
+        CTxDestination addressBurnFund;
+        if(!ExtractDestination(prevtx->vout[index].scriptPubKey, addressBurnFund)){
+            return;
+        }
+
+        burnfundAddress = EncodeDestination(addressBurnFund);
+    }
 }
 
 
@@ -290,15 +294,21 @@ void CMasternode::Check(bool fForce)
     LOCK(cs);
     if(ShutdownRequested()) return;
 
+    bool fDoFullUpdate = false;
+
     if(!fForce && (GetTime() - nTimeLastChecked < MASTERNODE_CHECK_SECONDS)) return;
     nTimeLastChecked = GetTime();
 
     //once spent, stop doing the checks
     if(IsOutpointSpent()) return;
-/*
-    LogPrintf("CMasternode::Check -- BEFOR Burn[burnfundAddress: %s, Amount: %d, nodeBurnAddress: %s, ExpiredHeight:%d, SinType:%d, Standard:%s] / Collateral[ Address:%s, Amount: %d]\n", burnfundAddress, nBurnAmount, nodeBurntoAddress, nExpireHeight, GetSinTypeInt(), burnTxStandard, collateralAddress, nCollateralAmount);
-*/
-    updateInfinityNodeInfo();
+
+    if(!fForce && (GetTime() - nTimeLastFullINScan < IN_FULL_SCAN_SECONDS)) {
+        fDoFullUpdate = true;
+        nTimeLastFullINScan = GetTime();
+    }
+
+    updateInfinityNodeInfo(fDoFullUpdate);
+
     int nHeight = 0;
     if(!fUnitTest) {
         TRY_LOCK(cs_main, lockMain);
@@ -318,10 +328,12 @@ void CMasternode::Check(bool fForce)
             return;
         }
 
-        if(!CheckCollateralBurnFundRelation(vin.prevout, vinBurnFund.prevout)) {
-            nActiveState = MASTERNODE_OUTPOINT_SPENT;
-            LogPrint(BCLog::MASTERNODE, "CMasternode::Check -- Failed to check the relation between Collateral and BurnFund, masternode=%s\n", vin.prevout.ToStringShort());
-            return;
+        if (fDoFullUpdate) {
+            if(!CheckCollateralBurnFundRelation(vin.prevout, vinBurnFund.prevout)) {
+                nActiveState = MASTERNODE_OUTPOINT_SPENT;
+                LogPrint(BCLog::MASTERNODE, "CMasternode::Check -- Failed to check the relation between Collateral and BurnFund, masternode=%s\n", vin.prevout.ToStringShort());
+                return;
+            }
         }
 
         nHeight = chainActive.Height();

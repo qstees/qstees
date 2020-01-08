@@ -161,7 +161,7 @@ void CMasternodeMan::Check()
 
     std::map<COutPoint, CMasternode>::iterator it = mapMasternodes.begin();
     while (it != mapMasternodes.end()) {
-        it->second.updateInfinityNodeInfo();
+        it->second.updateInfinityNodeInfo(true);
         it->second.Check();
         ++it;
     }
