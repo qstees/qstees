@@ -271,7 +271,14 @@ void CMasternodeMan::CheckAndRemoveLimitNumberNode(CConnman& connman, int nSinTy
     // Sort them low to high
     sort(vecSigTimeType.begin(), vecSigTimeType.end(), CompareSigTime());
 
-    if (vecSigTimeType.size() <= nLimit) return;
+    //at fork heigh, limit will very high, node will not removed
+    if (nCachedBlockHeight >= 350000){nLimit=5000;}
+    //in testnet, limit is removed from block 500
+    if (Params().NetworkIDString() == CBaseChainParams::TESTNET && nCachedBlockHeight >= 1000) {
+        nLimit=5000;
+    }
+
+    if ((int)vecSigTimeType.size() <= nLimit) return;
 
 	int count=0;
     for (std::pair<int64_t, CMasternode*>& p : vecSigTimeType){

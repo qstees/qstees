@@ -108,9 +108,11 @@ public:
     std::map<COutPoint, CInfinitynode> GetFullInfinitynodeNonMaturedMap() { LOCK(cs); return mapInfinitynodesNonMatured; }
     std::map<int, int> getStatementMap(int nSinType){
         LOCK(cs);
+        std::map<int, int> nullmap = {{0,0}};
         if(nSinType == 10) return mapStatementBIG;
-        if(nSinType == 5) return mapStatementMID;
-        if(nSinType == 1) return mapStatementLIL;
+        else if(nSinType == 5) return mapStatementMID;
+        else if(nSinType == 1) return mapStatementLIL;
+        else return nullmap;
     }
     int getLastStatement(int nSinType){
         LOCK(cs);

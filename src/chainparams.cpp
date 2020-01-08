@@ -256,6 +256,9 @@ public:
         consensus.devAddress = "SZLafuDjnjqh2tAfTrG9ZAGzbP8HkzNXvB";
         consensus.cBurnAddress = "SinBurnAddress123456789SuqaXbx3AMC";
         consensus.cBurnAddressPubKey = "ebaf5ec74cb2e2342dfda0229111738ff4dc742d";
+        consensus.cMetadataAddress = "SinBurnAddressForMetadataXXXXEU2mj";
+        consensus.cNotifyAddress = "SinBurnAddressForNotifyXXXXXc42TcT";
+        consensus.cGovernanceAddress = "SinBurnAddressGovernanceVoteba5vkQ";
         strSporkPubKey = "0454E1B43ECCAC17E50402370477455BE34593E272CA9AE0DF04F6F3D423D1366D017822C77990A3D8DD980C60D3692C9B6D7DFD75F683F7056C1E97E82BD94DBE";
 
         consensus.vDeployments[Consensus::DEPLOYMENT_TESTDUMMY].bit = 28;
@@ -375,6 +378,9 @@ public:
         consensus.devAddress = "SZLafuDjnjqh2tAfTrG9ZAGzbP8HkzNXvB";
         consensus.cBurnAddress = "SinBurnAddress123456789SuqaXbx3AMC";
         consensus.cBurnAddressPubKey = "ebaf5ec74cb2e2342dfda0229111738ff4dc742d";
+        consensus.cMetadataAddress = "SinBurnAddressForMetadataXXXXEU2mj";
+        consensus.cNotifyAddress = "SinBurnAddressForNotifyXXXXXc42TcT";
+        consensus.cGovernanceAddress = "SinBurnAddressGovernanceVoteba5vkQ";
         strSporkPubKey = "0454E1B43ECCAC17E50402370477455BE34593E272CA9AE0DF04F6F3D423D1366D017822C77990A3D8DD980C60D3692C9B6D7DFD75F683F7056C1E97E82BD94DBE";
 
         consensus.vDeployments[Consensus::DEPLOYMENT_TESTDUMMY].bit = 28;

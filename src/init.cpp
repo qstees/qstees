@@ -410,7 +410,6 @@ void SetupServerArgs()
     // When adding new options to the categories, please keep and ensure alphabetical ordering.
     gArgs.AddArg("-?", "Print this help message and exit", false, OptionsCategory::OPTIONS);
     gArgs.AddArg("-version", "Print version and exit", false, OptionsCategory::OPTIONS);
-    gArgs.AddArg("-pubkey", "pubkey for notary nodes.", false, OptionsCategory::OPTIONS);
     gArgs.AddArg("-alertnotify=<cmd>", "Execute command when a relevant alert is received or we see a really long fork (%s in cmd is replaced by message)", false, OptionsCategory::OPTIONS);
     gArgs.AddArg("-assumevalid=<hex>", strprintf("If this block is in the chain assume that it and its ancestors are valid and potentially skip their script verification (0 to verify all, default: %s, testnet: %s)", defaultChainParams->GetConsensus().defaultAssumeValid.GetHex(), testnetChainParams->GetConsensus().defaultAssumeValid.GetHex()), false, OptionsCategory::OPTIONS);
     gArgs.AddArg("-blocksdir=<dir>", "Specify blocks directory (default: <datadir>/blocks)", false, OptionsCategory::OPTIONS);
@@ -800,8 +799,6 @@ static bool AppInitServers()
     return true;
 }
 
-int32_t komodo_init();
-
 // Parameter interaction based on rules
 void InitParameterInteraction()
 {
@@ -869,8 +866,6 @@ void InitParameterInteraction()
     // specified in default section of config file, but not overridden
     // on the command line or in this network's section of the config file.
     gArgs.WarnForSectionOnlyArgs();
-
-    komodo_init();
 }
 
 static std::string ResolveErrMsg(const char * const optname, const std::string& strBind)
@@ -1956,6 +1951,7 @@ bool AppInitMain()
         return InitError(_("Failed to load RSV vote cache from") + "\n" + (pathDB / strDBName).string());
     }
 
+    LogPrintf("InfinityNode last scan height: %d and active Height: %d\n", infnodeman.getLastScan(), chainActive.Height());
     if (infnodeman.getLastScan() == 0){
         uiInterface.InitMessage(_("Initial on-chain infinitynode list..."));
         if ( chainActive.Height() < Params().GetConsensus().nInfinityNodeBeginHeight || infnodeman.initialInfinitynodeList(chainActive.Height()) == false){
