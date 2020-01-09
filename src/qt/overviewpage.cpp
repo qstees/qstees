@@ -246,9 +246,9 @@ void OverviewPage::infinityNodeStat()
     ui->labelMIDNodeRoi->setText(strMIDNodeROIText);
     ui->labelLILNodeRoi->setText(strLILNodeROIText);
 
-    QString strBIGNodeSTMText(tr("Statament %1").arg(infnodeman.getLastStatement(10)));
-    QString strMIDNodeSTMText(tr("Statament %1").arg(infnodeman.getLastStatement(5)));
-    QString strLILNodeSTMText(tr("Statament %1").arg(infnodeman.getLastStatement(1)));
+    QString strBIGNodeSTMText(tr("Statement %1").arg(infnodeman.getLastStatement(10)));
+    QString strMIDNodeSTMText(tr("Statement %1").arg(infnodeman.getLastStatement(5)));
+    QString strLILNodeSTMText(tr("Statement %1").arg(infnodeman.getLastStatement(1)));
 
     ui->labelBIGNodeSTM->setText(strBIGNodeSTMText);
     ui->labelMIDNodeSTM->setText(strMIDNodeSTMText);
