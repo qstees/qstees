@@ -965,7 +965,17 @@ static bool AcceptToMemoryPoolWorker(const CChainParams& chainparams, CTxMemPool
             }
         }
 
-        constexpr unsigned int scriptVerifyFlags = STANDARD_SCRIPT_VERIFY_FLAGS;
+        uint32_t scriptVerifyFlags = STANDARD_SCRIPT_VERIFY_FLAGS;
+
+        uint32_t additionalFlags = SCRIPT_VERIFY_NONE;
+        
+        // Add Schnorr flags only after fork
+        if (chainActive.Height() >= Params().GetConsensus().nSchnorrActivationHeight) {
+            additionalFlags |= SCRIPT_ENABLE_SCHNORR;
+        }
+        
+        // Make sure we're using the correct flags
+        scriptVerifyFlags |= additionalFlags;
 
         // Check against previous transactions
         // This is done last to help prevent CPU exhaustion denial-of-service attacks.
@@ -1936,6 +1946,11 @@ static unsigned int GetBlockScriptFlags(const CBlockIndex* pindex, const Consens
 
     if (IsNullDummyEnabled(pindex->pprev, consensusparams)) {
         flags |= SCRIPT_VERIFY_NULLDUMMY;
+    }
+
+    // Add Schnorr flags only after fork
+    if (pindex->nHeight >= consensusparams.nSchnorrActivationHeight) {
+        flags |= SCRIPT_ENABLE_SCHNORR;
     }
 
     return flags;

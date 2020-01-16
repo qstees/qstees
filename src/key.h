@@ -23,7 +23,7 @@
  */
 typedef std::vector<unsigned char, secure_allocator<unsigned char> > CPrivKey;
 
-/** An encapsulated private key. */
+/** An encapsulated ECDSA private key. */
 class CKey
 {
 public:
@@ -111,13 +111,19 @@ public:
     CPubKey GetPubKey() const;
 
     /**
-     * Create a DER-serialized signature.
+     * Create a DER-serialized ECDSA signature.
      * The test_case parameter tweaks the deterministic nonce.
      */
-    bool Sign(const uint256& hash, std::vector<unsigned char>& vchSig, bool grind = true, uint32_t test_case = 0) const;
+    bool SignECDSA(const uint256& hash, std::vector<unsigned char>& vchSig, bool grind = true, uint32_t test_case = 0) const;
 
     /**
-     * Create a compact signature (65 bytes), which allows reconstructing the used public key.
+     * Create a Schnorr signature.
+     * The test_case parameter tweaks the deterministic nonce.
+     */
+    bool SignSchnorr(const uint256 &hash, std::vector<uint8_t> &vchSig, uint32_t test_case = 0) const;
+
+    /**
+     * Create a compact ECDSA signature (65 bytes), which allows reconstructing the used public key.
      * The format is one header byte, followed by two times 32 bytes for the serialized r and s values.
      * The header byte: 0x1B = first key with even y, 0x1C = first key with odd y,
      *                  0x1D = second key with even y, 0x1E = second key with odd y,
@@ -131,6 +137,7 @@ public:
     /**
      * Verify thoroughly whether a private key and a public key match.
      * This is done using a different mechanism than just regenerating it.
+     * This follows a create->verify routine.
      */
     bool VerifyPubKey(const CPubKey& vchPubKey) const;
 
