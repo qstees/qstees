@@ -1,0 +1,839 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>CoinControlDialog</class>
+ <widget class="QDialog" name="CoinControlDialog">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>1000</width>
+    <height>500</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>Coin Selection</string>
+  </property>
+  <property name="styleSheet">
+   <string notr="true"> /*******   BGcolor #0d1827  Orange #FF8204 */
+
+QDialog#CoinControlDialog { /* Coin Control Dialog Window */
+ background-color: qlineargradient(x1: 0, y1: 0, x2: 1, y2: 0, stop:0 #0d0d1a, stop:1 #191b41); color:#020024;
+  color:#ffffff;
+  }
+  
+  QDialog#CoinControlDialog .QLabel#labelCoinControlQuantityText { /* Coin Control Quantity Label */
+  min-height:30px;
+  padding-left:15px;
+  color:#ffffff;
+  }
+  
+  QDialog#CoinControlDialog .QLabel#labelCoinControlQuantity { /* Coin Control Quantity */
+    color:#ffffff;
+  min-height:30px;
+  }
+  
+  QDialog#CoinControlDialog .QLabel#labelCoinControlBytesText { /* Coin Control Bytes Label */
+  padding-left:15px;
+  color:#ffffff;
+  }
+  
+  QDialog#CoinControlDialog .QLabel#labelCoinControlBytes { /* Coin Control Bytes */
+    color:#ffffff;
+  }
+  
+  QDialog#CoinControlDialog .QLabel#labelCoinControlAmountText { /* Coin Control Amount Label */
+  min-height:30px;
+  padding-left:15px;
+  color:#ffffff;
+  }
+  
+  QDialog#CoinControlDialog .QLabel#labelCoinControlAmount { /* Coin Control Amount */
+  min-height:30px;
+  color:#ffffff;
+  }
+  
+  QDialog#CoinControlDialog .QLabel#labelCoinControlPriorityText { /* Coin Control Priority Label */
+  padding-left:15px;
+  color:#ffffff;
+  }
+  
+  QDialog#CoinControlDialog .QLabel#labelCoinControlPriority { /* Coin Control Priority */
+    color:#ffffff;
+  }
+  
+  QDialog#CoinControlDialog .QLabel#labelCoinControlFeeText { /* Coin Control Fee Label */
+  min-height:30px;
+  padding-left:15px;
+  color:#ffffff;
+  }
+  
+  QDialog#CoinControlDialog .QLabel#labelCoinControlFee { /* Coin Control Fee */
+  min-height:30px;
+  color:#ffffff;
+  }
+  
+  QDialog#CoinControlDialog .QLabel#labelCoinControlLowOutputText { /* Coin Control Low Output Label */
+  padding-left:15px;
+  color:#ffffff;
+  }
+  
+  QDialog#CoinControlDialog .QLabel#labelCoinControlLowOutput { /* Coin Control Low Output */
+    color:#ffffff;
+  }
+  
+  QDialog#CoinControlDialog .QLabel#labelCoinControlAfterFeeText { /* Coin Control After Fee Label */
+  min-height:30px;
+  padding-left:15px;
+  color:#ffffff;
+  }
+  
+  QDialog#CoinControlDialog .QLabel#labelCoinControlAfterFee { /* Coin Control After Fee */
+  min-height:30px;
+  color:#ffffff;
+  }
+  
+  QDialog#CoinControlDialog .QLabel#labelCoinControlChangeText { /* Coin Control Change Label */
+  padding-left:15px;
+  color:#ffffff;
+  }
+  
+  QDialog#CoinControlDialog .QLabel#labelCoinControlChange { /* Coin Control Change */
+    color:#ffffff;
+  }
+ 
+
+QDialog#CoinControlDialog .QLabel#labelLocked { /* Coin Control Change */
+    color:#ffffff;
+  }
+
+
+  QDialog#CoinControlDialog .QFrame#frame .QPushButton#pushButtonSelectAll { /* (un)select all button */
+  padding-left:10px;
+  padding-right:10px;
+  min-height:25px;
+  }
+  
+  QDialog#CoinControlDialog .QFrame#frame .QPushButton#pushButtonToggleLock { /* Toggle lock state button */
+  padding-left:10px;
+  padding-right:10px;
+  min-height:25px;
+  }
+  
+  QDialog#CoinControlDialog .QDialogButtonBox#buttonBox QPushButton { /* Coin Control 'OK' button */
+  }
+  
+  QDialog#CoinControlDialog .QFrame#frame .QRadioButton#radioTreeMode { /* Coin Control Tree Mode Selector */
+  color:#ffffff;
+  background-color:transparent;
+  }
+  
+  QDialog#CoinControlDialog .QFrame#frame .QRadioButton#radioListMode { /* Coin Control List Mode Selector */
+  color:#ffffff;
+  background-color:transparent;
+  }
+ QDialog#CoinControlDialog .QFrame#frame .QRadioButton::indicator{
+ width: 24px;
+ height: 24px;
+}
+ QDialog#CoinControlDialog .QFrame#frame .QRadioButton::indicator::unchecked{ 
+ image: url(':/images/radio_unchecked');
+}
+ QDialog#CoinControlDialog .QFrame#frame .QRadioButton::indicator::checked{ 
+ image: url(':/images/radio_checked');
+}
+ QDialog#CoinControlDialog QHeaderView::section:first { /* Bug Fix: the number &quot;1&quot; displays in this table for some reason... */
+  color:transparent;
+  }
+  
+  QDialog#CoinControlDialog .CoinControlTreeWidget#treeWidget {
+	/* Coin Control Widget Container */
+	outline: 0;
+	background-color: transparent;
+	border: 0;
+	alternate-background-color: transparent;
+}
+  
+
+QDialog#CoinControlDialog .CoinControlTreeWidget#treeWidget::item {
+	background-color:transparent;
+	color:white;
+	padding-left:0;
+	border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+} 
+
+QDialog#CoinControlDialog .CoinControlTreeWidget#treeWidget::item:selected {
+	/* Coin Control Item (selected) */
+	background-color: #313d4b;
+	color: #fff;
+}
+QDialog#CoinControlDialog .CoinControlTreeWidget#treeWidget::item:checked {
+	/* Coin Control Item (checked) */
+	background-color: transparent;
+	color: #fff;
+}
+
+QPushButton {
+	/* Global Button Style */
+	background-color: #FF8204;
+	padding: 0.85em 2em;
+	font-family: &quot;Montserrat&quot;;
+	letter-spacing: 1px;
+	border: 0;
+	color: #ffffff;
+	font-size: 12px;
+	font-weight: bold;
+	border-radius: 19px;
+	text-transform: uppercase;
+}
+QPushButton:hover {
+	background-color: #db7e20;
+}
+QPushButton:focus {
+	border: none;
+	outline: none;
+}
+QPushButton:pressed {
+	border: 1px solid #333;
+}
+
+
+
+QTreeView::indicator:unchecked {
+image:url(':/images/unchecked');
+}
+
+QTreeView::indicator:checked {
+image:url(':/images/checked');
+}
+
+QTreeView::branch {
+    background-color: transparent;
+}
+QTreeView::branch:open {
+image:url(':/images/downArrow_small');
+}
+QTreeView::branch:closed:has-children {
+image:url(':/images/rightArrow_small'); 
+
+}
+
+QFrame#frame  {
+border : none;
+}
+
+QHeaderView { /* Table Header */
+background-color:transparent;
+}
+
+QHeaderView::section { /* Table Header Sections */
+background-color: transparent;
+color: #fff;
+min-height:30px;
+font-weight: bold;
+font-size: 14px;
+border: 0;
+padding-left: 5px;
+padding-right: 5px;
+}
+
+QScrollBar {
+	/* Scroll Bar */
+}
+QScrollBar:vertical {
+	/* Vertical Scroll Bar Attributes */
+	border: 0;
+	background: transparent;
+	width: 12px;
+    margin: 0;
+
+}
+QScrollBar:horizontal {
+	/* Horizontal Scroll Bar Attributes */
+	border: 0;
+	background: transparent;
+	height: 12px;
+    /* margin: 0px 18px 0px 18px; */
+    margin:0;
+
+}
+QScrollBar::handle:vertical {
+	/* Scroll Bar Slider - vertical */
+	background: #333b46;
+    border-radius: 6px;
+    min-height:50px;
+    width:3px;
+    /* border:2px solid transparent; */
+
+
+}
+
+QScrollBar::handle:horizontal {
+	/* Scroll Bar Slider - horizontal */
+	background: #333b46;
+    min-width: 50px;
+    border-radius: 6px;
+}
+QScrollBar::add-page,
+QScrollBar::sub-page {
+	/* Scroll Bar Background */
+	background: transparent;
+}
+QScrollBar::add-line:vertical,
+QScrollBar::sub-line:vertical,
+QScrollBar::add-line:horizontal,
+QScrollBar::sub-line:horizontal {
+	/* Define Arrow Button Dimensions */
+	background: none;
+	border: 0;
+	width: 16px;
+	height: 16px;
+}
+QScrollBar::add-line:vertical:pressed,
+QScrollBar::sub-line:vertical:pressed,
+QScrollBar::add-line:horizontal:pressed,
+QScrollBar::sub-line:horizontal:pressed {
+	background-color: #e0e0e0;
+}
+QScrollBar::sub-line:vertical {
+	/* Vertical - top button position */
+	subcontrol-position: top;
+	subcontrol-origin: margin;
+}
+QScrollBar::add-line:vertical {
+	/* Vertical - bottom button position */
+	subcontrol-position: bottom;
+	subcontrol-origin: margin;
+}
+QScrollBar::sub-line:horizontal {
+	/* Vertical - left button position */
+	subcontrol-position: left;
+	subcontrol-origin: margin;
+}
+QScrollBar::add-line:horizontal {
+	/* Vertical - right button position */
+	subcontrol-position: right;
+	subcontrol-origin: margin;
+}
+QScrollBar:up-arrow,
+QScrollBar:down-arrow,
+QScrollBar:left-arrow,
+QScrollBar:right-arrow {
+	/* Arrows Icon */
+	width: 10px;
+	height: 10px;
+	display: none;
+	opacity: 0;
+}
+QScrollBar:up-arrow {
+	background: none;
+}
+QScrollBar:down-arrow {
+    /* background-image: url(':/images/downArrow_small'); */
+    background: none;
+}
+QScrollBar:left-arrow {
+    /* background-image: url(':/images/leftArrow_small'); */
+    background: none;
+}
+QScrollBar:right-arrow {
+    /* background-image: url(':/images/rightArrow_small'); */
+    background: none;
+}
+</string>
+  </property>
+  <layout class="QVBoxLayout" name="verticalLayout">
+   <item>
+    <layout class="QHBoxLayout" name="horizontalLayoutTop" stretch="0,0,0,0">
+     <property name="topMargin">
+      <number>0</number>
+     </property>
+     <property name="bottomMargin">
+      <number>10</number>
+     </property>
+     <item>
+      <layout class="QFormLayout" name="formLayoutCoinControl1">
+       <property name="horizontalSpacing">
+        <number>10</number>
+       </property>
+       <property name="verticalSpacing">
+        <number>10</number>
+       </property>
+       <property name="leftMargin">
+        <number>6</number>
+       </property>
+       <property name="rightMargin">
+        <number>6</number>
+       </property>
+       <item row="0" column="0">
+        <widget class="QLabel" name="labelCoinControlQuantityText">
+         <property name="font">
+          <font>
+           <weight>75</weight>
+           <bold>true</bold>
+          </font>
+         </property>
+         <property name="text">
+          <string>Quantity:</string>
+         </property>
+        </widget>
+       </item>
+       <item row="0" column="1">
+        <widget class="QLabel" name="labelCoinControlQuantity">
+         <property name="cursor">
+          <cursorShape>IBeamCursor</cursorShape>
+         </property>
+         <property name="contextMenuPolicy">
+          <enum>Qt::ActionsContextMenu</enum>
+         </property>
+         <property name="text">
+          <string notr="true">0</string>
+         </property>
+         <property name="textInteractionFlags">
+          <set>Qt::LinksAccessibleByMouse|Qt::TextSelectableByKeyboard|Qt::TextSelectableByMouse</set>
+         </property>
+        </widget>
+       </item>
+       <item row="1" column="0">
+        <widget class="QLabel" name="labelCoinControlBytesText">
+         <property name="font">
+          <font>
+           <weight>75</weight>
+           <bold>true</bold>
+          </font>
+         </property>
+         <property name="text">
+          <string>Bytes:</string>
+         </property>
+        </widget>
+       </item>
+       <item row="1" column="1">
+        <widget class="QLabel" name="labelCoinControlBytes">
+         <property name="cursor">
+          <cursorShape>IBeamCursor</cursorShape>
+         </property>
+         <property name="contextMenuPolicy">
+          <enum>Qt::ActionsContextMenu</enum>
+         </property>
+         <property name="text">
+          <string notr="true">0</string>
+         </property>
+         <property name="textInteractionFlags">
+          <set>Qt::LinksAccessibleByMouse|Qt::TextSelectableByKeyboard|Qt::TextSelectableByMouse</set>
+         </property>
+        </widget>
+       </item>
+      </layout>
+     </item>
+     <item>
+      <layout class="QFormLayout" name="formLayoutCoinControl2">
+       <property name="horizontalSpacing">
+        <number>10</number>
+       </property>
+       <property name="verticalSpacing">
+        <number>10</number>
+       </property>
+       <property name="leftMargin">
+        <number>6</number>
+       </property>
+       <property name="rightMargin">
+        <number>6</number>
+       </property>
+       <item row="0" column="0">
+        <widget class="QLabel" name="labelCoinControlAmountText">
+         <property name="font">
+          <font>
+           <weight>75</weight>
+           <bold>true</bold>
+          </font>
+         </property>
+         <property name="text">
+          <string>Amount:</string>
+         </property>
+        </widget>
+       </item>
+       <item row="0" column="1">
+        <widget class="QLabel" name="labelCoinControlAmount">
+         <property name="cursor">
+          <cursorShape>IBeamCursor</cursorShape>
+         </property>
+         <property name="contextMenuPolicy">
+          <enum>Qt::ActionsContextMenu</enum>
+         </property>
+         <property name="text">
+          <string notr="true">0.00 QSTEES</string>
+         </property>
+         <property name="textInteractionFlags">
+          <set>Qt::LinksAccessibleByMouse|Qt::TextSelectableByKeyboard|Qt::TextSelectableByMouse</set>
+         </property>
+        </widget>
+       </item>
+       <item row="1" column="0">
+        <widget class="QLabel" name="labelCoinControlLowOutputText">
+         <property name="enabled">
+          <bool>false</bool>
+         </property>
+         <property name="font">
+          <font>
+           <weight>75</weight>
+           <bold>true</bold>
+          </font>
+         </property>
+         <property name="text">
+          <string>Dust:</string>
+         </property>
+        </widget>
+       </item>
+       <item row="1" column="1">
+        <widget class="QLabel" name="labelCoinControlLowOutput">
+         <property name="enabled">
+          <bool>false</bool>
+         </property>
+         <property name="cursor">
+          <cursorShape>IBeamCursor</cursorShape>
+         </property>
+         <property name="contextMenuPolicy">
+          <enum>Qt::ActionsContextMenu</enum>
+         </property>
+         <property name="text">
+          <string notr="true">no</string>
+         </property>
+         <property name="textInteractionFlags">
+          <set>Qt::LinksAccessibleByMouse|Qt::TextSelectableByKeyboard|Qt::TextSelectableByMouse</set>
+         </property>
+        </widget>
+       </item>
+      </layout>
+     </item>
+     <item>
+      <layout class="QFormLayout" name="formLayoutCoinControl3">
+       <property name="horizontalSpacing">
+        <number>10</number>
+       </property>
+       <property name="verticalSpacing">
+        <number>10</number>
+       </property>
+       <property name="leftMargin">
+        <number>6</number>
+       </property>
+       <property name="rightMargin">
+        <number>6</number>
+       </property>
+       <item row="0" column="0">
+        <widget class="QLabel" name="labelCoinControlFeeText">
+         <property name="font">
+          <font>
+           <weight>75</weight>
+           <bold>true</bold>
+          </font>
+         </property>
+         <property name="text">
+          <string>Fee:</string>
+         </property>
+        </widget>
+       </item>
+       <item row="0" column="1">
+        <widget class="QLabel" name="labelCoinControlFee">
+         <property name="cursor">
+          <cursorShape>IBeamCursor</cursorShape>
+         </property>
+         <property name="contextMenuPolicy">
+          <enum>Qt::ActionsContextMenu</enum>
+         </property>
+         <property name="text">
+          <string notr="true">0.00 QSTEES</string>
+         </property>
+         <property name="textInteractionFlags">
+          <set>Qt::LinksAccessibleByMouse|Qt::TextSelectableByKeyboard|Qt::TextSelectableByMouse</set>
+         </property>
+        </widget>
+       </item>
+      </layout>
+     </item>
+     <item>
+      <layout class="QFormLayout" name="formLayoutCoinControl4">
+       <property name="horizontalSpacing">
+        <number>10</number>
+       </property>
+       <property name="verticalSpacing">
+        <number>10</number>
+       </property>
+       <property name="leftMargin">
+        <number>6</number>
+       </property>
+       <property name="rightMargin">
+        <number>6</number>
+       </property>
+       <item row="0" column="0">
+        <widget class="QLabel" name="labelCoinControlAfterFeeText">
+         <property name="font">
+          <font>
+           <weight>75</weight>
+           <bold>true</bold>
+          </font>
+         </property>
+         <property name="text">
+          <string>After Fee:</string>
+         </property>
+        </widget>
+       </item>
+       <item row="0" column="1">
+        <widget class="QLabel" name="labelCoinControlAfterFee">
+         <property name="cursor">
+          <cursorShape>IBeamCursor</cursorShape>
+         </property>
+         <property name="contextMenuPolicy">
+          <enum>Qt::ActionsContextMenu</enum>
+         </property>
+         <property name="text">
+          <string notr="true">0.00 QSTEES</string>
+         </property>
+         <property name="textInteractionFlags">
+          <set>Qt::LinksAccessibleByMouse|Qt::TextSelectableByKeyboard|Qt::TextSelectableByMouse</set>
+         </property>
+        </widget>
+       </item>
+       <item row="1" column="0">
+        <widget class="QLabel" name="labelCoinControlChangeText">
+         <property name="enabled">
+          <bool>false</bool>
+         </property>
+         <property name="font">
+          <font>
+           <weight>75</weight>
+           <bold>true</bold>
+          </font>
+         </property>
+         <property name="text">
+          <string>Change:</string>
+         </property>
+        </widget>
+       </item>
+       <item row="1" column="1">
+        <widget class="QLabel" name="labelCoinControlChange">
+         <property name="enabled">
+          <bool>false</bool>
+         </property>
+         <property name="cursor">
+          <cursorShape>IBeamCursor</cursorShape>
+         </property>
+         <property name="contextMenuPolicy">
+          <enum>Qt::ActionsContextMenu</enum>
+         </property>
+         <property name="text">
+          <string notr="true">0.00 QSTEES</string>
+         </property>
+         <property name="textInteractionFlags">
+          <set>Qt::LinksAccessibleByMouse|Qt::TextSelectableByKeyboard|Qt::TextSelectableByMouse</set>
+         </property>
+        </widget>
+       </item>
+      </layout>
+     </item>
+    </layout>
+   </item>
+   <item>
+    <widget class="QFrame" name="frame">
+     <property name="minimumSize">
+      <size>
+       <width>0</width>
+       <height>40</height>
+      </size>
+     </property>
+     <property name="frameShape">
+      <enum>QFrame::StyledPanel</enum>
+     </property>
+     <property name="frameShadow">
+      <enum>QFrame::Sunken</enum>
+     </property>
+     <layout class="QHBoxLayout" name="horizontalLayout">
+      <item>
+       <layout class="QHBoxLayout" name="horizontalLayoutPanel" stretch="0,0,0,0,0,0">
+        <property name="spacing">
+         <number>14</number>
+        </property>
+        <item>
+         <widget class="QPushButton" name="pushButtonSelectAll">
+          <property name="sizePolicy">
+           <sizepolicy hsizetype="Maximum" vsizetype="Fixed">
+            <horstretch>0</horstretch>
+            <verstretch>0</verstretch>
+           </sizepolicy>
+          </property>
+          <property name="text">
+           <string>(un)select all</string>
+          </property>
+          <property name="autoDefault">
+           <bool>false</bool>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QPushButton" name="pushButtonToggleLock">
+          <property name="sizePolicy">
+           <sizepolicy hsizetype="Maximum" vsizetype="Fixed">
+            <horstretch>0</horstretch>
+            <verstretch>0</verstretch>
+           </sizepolicy>
+          </property>
+          <property name="text">
+           <string>toggle lock state</string>
+          </property>
+          <property name="autoDefault">
+           <bool>false</bool>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QRadioButton" name="radioTreeMode">
+          <property name="sizePolicy">
+           <sizepolicy hsizetype="Maximum" vsizetype="Fixed">
+            <horstretch>0</horstretch>
+            <verstretch>0</verstretch>
+           </sizepolicy>
+          </property>
+          <property name="text">
+           <string>Tree mode</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QRadioButton" name="radioListMode">
+          <property name="sizePolicy">
+           <sizepolicy hsizetype="Maximum" vsizetype="Fixed">
+            <horstretch>0</horstretch>
+            <verstretch>0</verstretch>
+           </sizepolicy>
+          </property>
+          <property name="text">
+           <string>List mode</string>
+          </property>
+          <property name="checked">
+           <bool>true</bool>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QLabel" name="labelLocked">
+          <property name="text">
+           <string notr="true">(1 locked)</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <spacer name="horizontalSpacer">
+          <property name="orientation">
+           <enum>Qt::Horizontal</enum>
+          </property>
+          <property name="sizeHint" stdset="0">
+           <size>
+            <width>40</width>
+            <height>20</height>
+           </size>
+          </property>
+         </spacer>
+        </item>
+       </layout>
+      </item>
+     </layout>
+    </widget>
+   </item>
+   <item>
+    <widget class="CoinControlTreeWidget" name="treeWidget">
+     <property name="contextMenuPolicy">
+      <enum>Qt::CustomContextMenu</enum>
+     </property>
+     <property name="sortingEnabled">
+      <bool>false</bool>
+     </property>
+     <property name="columnCount">
+      <number>10</number>
+     </property>
+     <attribute name="headerShowSortIndicator" stdset="0">
+      <bool>true</bool>
+     </attribute>
+     <attribute name="headerStretchLastSection">
+      <bool>false</bool>
+     </attribute>
+     <column>
+      <property name="text">
+       <string/>
+      </property>
+     </column>
+     <column>
+      <property name="text">
+       <string>Amount</string>
+      </property>
+     </column>
+     <column>
+      <property name="text">
+       <string>Label</string>
+      </property>
+     </column>
+     <column>
+      <property name="text">
+       <string>Address</string>
+      </property>
+     </column>
+     <column>
+      <property name="text">
+       <string>Date</string>
+      </property>
+     </column>
+     <column>
+      <property name="text">
+       <string>Ages</string>
+      </property>
+      <property name="toolTip">
+       <string>Confirmed</string>
+      </property>
+     </column>
+     <column>
+      <property name="text">
+       <string>TxHash</string>
+      </property>
+     </column>
+     <column>
+      <property name="text">
+       <string>Index</string>
+      </property>
+     </column>
+     <column>
+      <property name="text">
+       <string/>
+      </property>
+     </column>
+     <column>
+      <property name="text">
+       <string/>
+      </property>
+     </column>
+    </widget>
+   </item>
+   <item>
+    <widget class="QDialogButtonBox" name="buttonBox">
+     <property name="sizePolicy">
+      <sizepolicy hsizetype="Maximum" vsizetype="Fixed">
+       <horstretch>0</horstretch>
+       <verstretch>0</verstretch>
+      </sizepolicy>
+     </property>
+     <property name="orientation">
+      <enum>Qt::Horizontal</enum>
+     </property>
+     <property name="standardButtons">
+      <set>QDialogButtonBox::Ok</set>
+     </property>
+    </widget>
+   </item>
+  </layout>
+ </widget>
+ <customwidgets>
+  <customwidget>
+   <class>CoinControlTreeWidget</class>
+   <extends>QTreeWidget</extends>
+   <header>qt/coincontroltreewidget.h</header>
+  </customwidget>
+ </customwidgets>
+ <resources/>
+ <connections/>
+</ui>
