@@ -1463,11 +1463,11 @@ case $os in
 	nsk*)
 		os=nsk
 		;;
-	# Preserve the version number of qsteesix5.
-	qsteesix5.*)
-		os=`echo $os | sed -e 's|qsteesix|sysv|'`
+	# Preserve the version number of sinix5.
+	sinix5.*)
+		os=`echo $os | sed -e 's|sinix|sysv|'`
 		;;
-	qsteesix*)
+	sinix*)
 		os=sysv4
 		;;
 	tpf*)

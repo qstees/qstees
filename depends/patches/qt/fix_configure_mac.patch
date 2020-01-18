@@ -32,11 +32,11 @@
 +++ new/qtbase/configure	2018-03-23 05:42:29.000000000 -0700
 @@ -232,8 +232,13 @@
  
-     sdk=$(getQsteesgleQMakeVariable "QMAKE_MAC_SDK" "$1")
+     sdk=$(getSingleQMakeVariable "QMAKE_MAC_SDK" "$1")
      if [ -z "$sdk" ]; then echo "QMAKE_MAC_SDK must be set when building on Mac" >&2; exit 1; fi
 -    sysroot=$(/usr/bin/xcrun --sdk $sdk --show-sdk-path 2>/dev/null)
 -    if [ -z "$sysroot" ]; then echo "Failed to resolve SDK path for '$sdk'" >&2; exit 1; fi
-+    sysroot=$(getQsteesgleQMakeVariable "QMAKE_MAC_SDK_PATH" "$1")
++    sysroot=$(getSingleQMakeVariable "QMAKE_MAC_SDK_PATH" "$1")
 +
 +    echo "sysroot pre-configured as $sysroot";
 +    if [ -z "$sysroot" ]; then
