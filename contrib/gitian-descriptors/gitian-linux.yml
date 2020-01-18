@@ -1,5 +1,5 @@
 ---
-name: "bitcoin-linux-0.17"
+name: "qstees-linux-0.17"
 enable_cache: true
 suites:
 - "bionic"
@@ -28,8 +28,8 @@ packages:
 - "ca-certificates"
 - "python"
 remotes:
-- "url": "https://github.com/bitcoin/bitcoin.git"
-  "dir": "bitcoin"
+- "url": "https://github.com/qstees/qstees.git"
+  "dir": "qstees"
 files: []
 script: |
 
