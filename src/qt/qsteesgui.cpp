@@ -332,15 +332,15 @@ void BitcoinGUI::createActions()
     quitAction->setStatusTip(tr("Quit application"));
     quitAction->setShortcut(QKeySequence(Qt::CTRL + Qt::Key_Q));
     quitAction->setMenuRole(QAction::QuitRole);
-    aboutAction = new QAction(platformStyle->TextColorIcon(":/icons/about2"), tr("&About %1").arg(tr("QSTEESOVATE")), this);
-    aboutAction->setStatusTip(tr("Show information about %1").arg(tr("QSTEESOVATE")));
+    aboutAction = new QAction(platformStyle->TextColorIcon(":/icons/about2"), tr("&About %1").arg(tr("qstees")), this);
+    aboutAction->setStatusTip(tr("Show information about %1").arg(tr("qstees")));
     aboutAction->setMenuRole(QAction::AboutRole);
     aboutAction->setEnabled(false);
     aboutQtAction = new QAction(platformStyle->TextColorIcon(":/icons/about_qt"), tr("About &Qt"), this);
     aboutQtAction->setStatusTip(tr("Show information about Qt"));
     aboutQtAction->setMenuRole(QAction::AboutQtRole);
     optionsAction = new QAction(platformStyle->TextColorIcon(":/icons/options"), tr("&Options..."), this);
-    optionsAction->setStatusTip(tr("Modify configuration options for %1").arg(tr("QSTEESOVATE")));
+    optionsAction->setStatusTip(tr("Modify configuration options for %1").arg(tr("qstees")));
     optionsAction->setMenuRole(QAction::PreferencesRole);
     optionsAction->setEnabled(false);
     toggleHideAction = new QAction(platformStyle->TextColorIcon(":/icons/about2"), tr("&Show / Hide"), this);
@@ -407,7 +407,7 @@ void BitcoinGUI::createActions()
 
     showHelpMessageAction = new QAction(platformStyle->TextColorIcon(":/icons/info"), tr("&Command-line options"), this);
     showHelpMessageAction->setMenuRole(QAction::NoRole);
-    showHelpMessageAction->setStatusTip(tr("Show the %1 help message to get a list with possible QSTEES command-line options").arg(tr("QSTEESOVATE")));
+    showHelpMessageAction->setStatusTip(tr("Show the %1 help message to get a list with possible QSTEES command-line options").arg(tr("qstees")));
 
     // Dash
 
@@ -738,7 +738,7 @@ void BitcoinGUI::createTrayIcon(const NetworkStyle *networkStyle)
 {
 #ifndef Q_OS_MAC
     trayIcon = new QSystemTrayIcon(this);
-    QString toolTip = tr("%1 client").arg(tr("QSTEESOVATE")) + " " + networkStyle->getTitleAddText();
+    QString toolTip = tr("%1 client").arg(tr("qstees")) + " " + networkStyle->getTitleAddText();
     trayIcon->setToolTip(toolTip);
     trayIcon->setIcon(networkStyle->getTrayAndWindowIcon());
     trayIcon->hide();

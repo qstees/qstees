@@ -18,7 +18,7 @@ To Build
 ---------------------
 
 ```bash
-git clone https://github.com/QSTEESOVATEblockchain/QSTEES-core
+git clone https://github.com/qstees/QSTEES-core
 cd QSTEES-core/
 cd depends/
 make HOST=x86_64-linux-gnu
@@ -254,7 +254,7 @@ Setup and Build Example: Arch Linux
 This example lists the steps necessary to setup and build a command line only, non-wallet distribution of the latest changes on Arch Linux:
 
     pacman -S git base-devel boost libevent python
-    git clone https://github.com/QSTEESOVATEblockchain/QSTEES-core
+    git clone https://github.com/qstees/QSTEES-core
     cd QSTEES-core/
     ./autogen.sh
     ./configure --disable-wallet --without-gui --without-miniupnpc
@@ -280,7 +280,7 @@ Then, install the toolchain and curl:
     sudo apt-get install g++-arm-linux-gnueabihf curl
 
 To build executables for ARM:
-    git clone https://github.com/QSTEESOVATEblockchain/QSTEES-core
+    git clone https://github.com/qstees/QSTEES-core
     cd QSTEES-core/
     cd depends
     make HOST=arm-linux-gnueabihf NO_QT=1

@@ -584,7 +584,7 @@ void SetupServerArgs()
 
 std::string LicenseInfo()
 {
-    const std::string URL_SOURCE_CODE = "<https://github.com/QSTEESOVATEblockchain/>";
+    const std::string URL_SOURCE_CODE = "<https://github.com/qstees/>";
     const std::string URL_WEBSITE = "<https://qsteesovate.io>";
 
     return CopyrightHolders(strprintf(_("Copyright (C) %i-%i"), 2009, COPYRIGHT_YEAR) + " ") + "\n" +

@@ -1,16 +1,16 @@
 
-QSTEESOVATE 
+qstees 
 Create –  Build – Innovate
 =============
 
-QSTEESOVATE (QSTEES) is an open-source state of the art Peer-to-Peer digital cryptocurrency dedicated to building innovative blockchain services, and solutions.
+qstees (QSTEES) is an open-source state of the art Peer-to-Peer digital cryptocurrency dedicated to building innovative blockchain services, and solutions.
 ---------------------
 
 
 QSTEES Core
 
 
-To download QSTEES Core, visit https://qsteesovate.io/ or [https://github.com/QSTEESOVATEblockchain/QSTEES-core)
+To download QSTEES Core, visit https://qsteesovate.io/ or [https://github.com/qstees/QSTEES-core)
 
 Running
 ---------------------
@@ -51,7 +51,7 @@ The following are developer notes on how to build Bitcoin Core on your native pl
 
 Development
 ---------------------
-The QSTEESOVATE repo's [root README](/README.md) contains relevant information on the development process and automated testing.
+The qstees repo's [root README](/README.md) contains relevant information on the development process and automated testing.
 
 - [Developer Notes](developer-notes.md)
 - [Release Notes](release-notes.md)

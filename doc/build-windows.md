@@ -1,7 +1,7 @@
 WINDOWS BUILD NOTES
 ====================
 
-Below are some notes on how to build QSTEES-Core for Windows.
+Below are some notes on how to build qstees for Windows.
 
 The options known to work for building QSTEES Core on Windows are:
 
@@ -85,7 +85,7 @@ This means you cannot use a directory that located directly on the host Windows 
 
 Acquire the source in the usual way:
 
-    git clone https://github.com/QSTEESOVATEblockchain/QSTEES-core
+    git clone https://github.com/qstees/QSTEES-core
 
 Once the source code is ready the build steps are below.
 
@@ -113,7 +113,7 @@ This means you cannot use a directory that located directly on the host Windows 
 
 Acquire the source in the usual way:
 
-    git clone https://github.com/QSTEESOVATEblockchain/QSTEES-core
+    git clone https://github.com/qstees/QSTEES-core
 
 Then build using:
 

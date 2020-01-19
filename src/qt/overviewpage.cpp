@@ -139,14 +139,14 @@ OverviewPage::OverviewPage(const PlatformStyle *platformStyle, QWidget *parent) 
 {
     ui->setupUi(this);
     //ui->pushButton_Website->setIcon(QIcon(GUIUtil::getThemeImage(":/icons/website")));
-    ui->pushButton_Website->setStatusTip(tr("QSTEESOVATE Website"));
-    ui->pushButton_Discord->setStatusTip(tr("QSTEESOVATE Discord Channel"));
-    ui->pushButton_Telegram->setStatusTip(tr("QSTEESOVATE Telegram Channel"));
-    ui->pushButton_Twitter->setStatusTip(tr("QSTEESOVATE Twitter Channel"));
-    ui->pushButton_Explorer->setStatusTip(tr("QSTEESOVATE Block Explorer"));
-    ui->pushButton_Reddit->setStatusTip(tr("QSTEESOVATE Reddit"));
-    ui->pushButton_Facebook->setStatusTip(tr("QSTEESOVATE Facebook"));
-    ui->pushButton_Youtube->setStatusTip(tr("QSTEESOVATE Youtube Channel"));
+    ui->pushButton_Website->setStatusTip(tr("qstees Website"));
+    ui->pushButton_Discord->setStatusTip(tr("qstees Discord Channel"));
+    ui->pushButton_Telegram->setStatusTip(tr("qstees Telegram Channel"));
+    ui->pushButton_Twitter->setStatusTip(tr("qstees Twitter Channel"));
+    ui->pushButton_Explorer->setStatusTip(tr("qstees Block Explorer"));
+    ui->pushButton_Reddit->setStatusTip(tr("qstees Reddit"));
+    ui->pushButton_Facebook->setStatusTip(tr("qstees Facebook"));
+    ui->pushButton_Youtube->setStatusTip(tr("qstees Youtube Channel"));
 
 
     m_balances.balance = -1;

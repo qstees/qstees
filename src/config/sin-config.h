@@ -30,10 +30,10 @@
 #define COPYRIGHT_HOLDERS "The %s Developers"
 
 /* Copyright holder(s) */
-#define COPYRIGHT_HOLDERS_FINAL "The QSTEESOVATE Developers"
+#define COPYRIGHT_HOLDERS_FINAL "The qstees Developers"
 
 /* Replacement for %s in copyright holders string */
-#define COPYRIGHT_HOLDERS_SUBSTITUTION "QSTEESOVATE"
+#define COPYRIGHT_HOLDERS_SUBSTITUTION "qstees"
 
 /* Copyright year */
 #define COPYRIGHT_YEAR 2020
@@ -350,7 +350,7 @@
 #define LT_OBJDIR ".libs/"
 
 /* Define to the address where bug reports for this package should be sent. */
-#define PACKAGE_BUGREPORT "https://github.com/QSTEESOVATEblockchain/QSTEES-core"
+#define PACKAGE_BUGREPORT "https://github.com/qstees/QSTEES-core"
 
 /* Define to the full name of this package. */
 #define PACKAGE_NAME "QSTEES"
@@ -359,7 +359,7 @@
 #define PACKAGE_STRING "QSTEES 0.17.1"
 
 /* Define to the one symbol short name of this package. */
-#define PACKAGE_TARNAME "QSTEESOVATE"
+#define PACKAGE_TARNAME "qstees"
 
 /* Define to the home page for this package. */
 #define PACKAGE_URL "https://qsteesovate.io"

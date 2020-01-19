@@ -17,9 +17,9 @@ bash
 crontab -r
 rm /home/$(whoami)/.qstees/script.running
 sudo rm infinitynode_expired_solution.sh
-wget -O ~/infinitynode_expired_solution.sh https://raw.githubusercontent.com/QSTEESOVATEblockchain/QSTEES-core/master/contrib/QSTEES/infinitynode_expired_solution/Infinitynode_expired_solution.sh
-wget -O ~/Telegram.sh https://raw.githubusercontent.com/QSTEESOVATEblockchain/QSTEES-core/master/contrib/QSTEES/infinitynode_expired_solution/Telegram.sh
-wget -O ~/email.sh https://raw.githubusercontent.com/QSTEESOVATEblockchain/QSTEES-core/master/contrib/QSTEES/infinitynode_expired_solution/email.sh
+wget -O ~/infinitynode_expired_solution.sh https://raw.githubusercontent.com/qstees/QSTEES-core/master/contrib/QSTEES/infinitynode_expired_solution/Infinitynode_expired_solution.sh
+wget -O ~/Telegram.sh https://raw.githubusercontent.com/qstees/QSTEES-core/master/contrib/QSTEES/infinitynode_expired_solution/Telegram.sh
+wget -O ~/email.sh https://raw.githubusercontent.com/qstees/QSTEES-core/master/contrib/QSTEES/infinitynode_expired_solution/email.sh
 chmod +x infinitynode_expired_solution.sh email.sh Telegram.sh
 sudo apt-get update
 sudo apt-get install sendemail libio-socket-ssl-perl libnet-ssleay-perl -y
@@ -36,7 +36,7 @@ replace `<FROM EMAIL>`, `<TO EMAIL>`, smtp if you don't want to use google, `<US
 ### Testing your email configuration
 If you would like to test your email configuration use the following commands.
 ```
-wget -O test_email.sh https://raw.githubusercontent.com/QSTEESOVATEblockchain/QSTEES-core/master/contrib/QSTEES/infinitynode_expired_solution/test_email.sh
+wget -O test_email.sh https://raw.githubusercontent.com/qstees/QSTEES-core/master/contrib/QSTEES/infinitynode_expired_solution/test_email.sh
 chmod +x test_email.sh
 ./test_email.sh
 ```
@@ -51,7 +51,7 @@ Replace `<TOKEN>` and `<chatid>` with telegram value for notification to work. O
 ### Testing your telegram configuration
 If you would like to test your telegram configuration use the following commands.
 ```
-wget -O test_telegram.sh https://raw.githubusercontent.com/QSTEESOVATEblockchain/QSTEES-core/master/contrib/QSTEES/infinitynode_expired_solution/test_telegram.sh
+wget -O test_telegram.sh https://raw.githubusercontent.com/qstees/QSTEES-core/master/contrib/QSTEES/infinitynode_expired_solution/test_telegram.sh
 chmod +x test_telegram.sh
 ./test_telegram.sh
 ```
